@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+    <link rel="stylesheet" type="text/css" href="/bootstrap/slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="/bootstrap/slick/slick-theme.css"/>
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="container mb-5">
+        <div class="row mt-4">
+            <div class="col-3"></div>
+            <div class="col-6">
+
+                <div class="alert alert-dismissible alert-primary">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    자극적인 내용 혹은 어그로성 게시물은 관리자에 의해 삭제, 제재 될 수 있습니다.
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="/bootstrap/slick/slick.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $('.slider').slick({
+                    dots: true,
+                    infinite: true,
+                    speed: 500,
+                    fade: true,
+                    cssEase: 'linear',
+                    adaptiveHeight: !0
+                });
+            });
+        </script>
+        <div class="row mt-4">
+
+            <div class="col-3"></div>
+            <div class="col-6">
+                <form id="writeForm" class="mb-5" action="/feed/modifyFeed" onsubmit="return chk()" method="post" name="modifyForm" enctype="multipart/form-data">
+                    <input type="hidden" th:value="${feed.feedNo}" name="feedNo">
+                <div class="form-group mb-2">
+                    <small class="form-text text-muted">5mb가 넘지 않은 jpg,jpeg,png,gif 파일을<br> 5장까지 업로드 할수 있습니다.</small>
+                    <input class="form-control" type="file" id="formFile"  name="photos" onchange="readPhoto(this)" multiple>
+                </div>
+                <div id="previewSlider">
+                    <div class="slider">
+                        <div th:if="${!#lists.isEmpty(feed.getPhotoNames())}" th:each="photo : ${feed.photoNames}">
+                            <div>
+                                <img width="100%" height="200"
+                                     th:src="@{'/image/feed/'+${feed.writer}+'/'+${feed.feedNo}+'/'+${photo}}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="introDiv" class="mt-2 mb-1">
+                    <small class="form-text text-muted" id="contentHelp">300자이내로 작성해주세요.
+                        <span id="textCount" class="form-text text-muted"></span>
+                    </small>
+
+                    <textarea class="form-control" id="content" name="content" th:text="${feed.content}"></textarea>
+                </div>
+                <div align="center">
+                    <button type="submit" class="btn btn-success mt-2">수정 완료</button>
+                </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div th:replace="fragments/footer :: footerFragment" class="mt-3"></div>
+</body>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        autosize(document.querySelectorAll('#content'));
+    }, false);
+
+    $(document).ready(function () {
+        let content = $('#content').text();
+        // 글자수 세기
+        if (content.length == 0 || content == '') {
+            $('#textCount').text('0자');
+        } else {
+            $('#textCount').text(content.length + '자');
+        }
+        $('#content').keyup(function () {
+            let content = $(this).val();
+            // 글자수 세기
+            if (content.length == 0 || content == '') {
+                $('#textCount').text('0자');
+            } else {
+                $('#textCount').text(content.length + '자');
+            }
+
+            // 글자수 제한
+            if (content.length > 300) {
+                // 300자 부터는 타이핑 되지 않도록
+                $(this).val($(this).val().substring(0, 300));
+                // 300자 넘으면 알림창 뜨도록
+                alert('300자까지 입력 가능합니다.');
+            }
+
+        });
+    });
+    function chk(){
+        let content = $('#content').val();
+        let blank_pattern = /^\s+|\s+$/g;
+        if (content.length == 0 || content == '' || content.replace(blank_pattern, '')== "") {
+            alert("내용을 입력해주세요");
+            return false;
+        }
+        let inputFile = $('#formFile').val();
+        if(inputFile.val() == ""){
+            alert("사진은 한장 이상 첨부되어야합니다.");
+            return false;
+        }
+
+    }
+    function readPhoto(input) {
+        if (input.files) {
+            let arrLength = input.files.length;
+            if (arrLength > 5) {
+                alert("최대 5장의 사진만 올릴 수 있습니다.");
+                $("#formFile").val("");
+                return;
+            }
+
+            $("#previewSlider").children().remove();
+            const fileArr = Array.from(input.files);
+
+            fileArr.forEach((file, index) => {
+                if (file.size > (5 * 1024 * 1024)) {
+                    alert("5mb 보다 큰 사진은 업로드할 수 없습니다.");
+                    $("#formFile").val("");
+                    return;
+                }
+                let fileName = file.name;
+                let ext = fileName.split('.').pop().toLowerCase();
+                if ($.inArray(ext, ['jpg', 'gif', 'jpeg', 'png']) == -1) {
+                    alert('jpg,gif,jpeg,png 파일만 업로드 할수 있습니다.');
+                    $("#formFile").val("");
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                if (index == 0) {
+                    $("#previewSlider").append("<div class='slider'><div><img width='100%' id='view"+index+"' height='200' src=''></div></div>");
+                } else {
+                    $(".slider").append("<div><img width='100%' id='view"+index+"' height='200' src=''></div>");
+                }
+                reader.onload = e => {
+                    $("#view" + index).attr("src", e.target.result);
+                }
+                reader.readAsDataURL(file);
+
+            });
+            $('.slider').slick({
+                dots: true,
+                infinite: true,
+                speed: 500,
+                fade: true,
+                cssEase: 'linear',
+                adaptiveHeight: !0
+            });
+        }
+
+
+    }
+
+</script>
+</html>

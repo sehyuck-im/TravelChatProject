@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <div th:replace="fragments/config :: configFragment"></div>
+    <title>Title</title>
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="row mt-4">
+        <div class="col-3"></div>
+        <div class="card mb-3 col-6">
+            <h3 class="card-header" id="chatRoomHeader">
+                <th:block th:if="${chatRoom.getGroupChat == 'y'}">
+                    <div class="accordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    <h5 th:text="${roomTitle}"></h5>
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                                 data-bs-parent="#accordionExample" style="">
+                                <div class="accordion-body" th:each="user : ${chatUserList}"
+                                     th:if="${user.mNo == chatRoom.admin}">
+                                    <i class="fa-solid fa-chess-king"></i>
+                                    <a th:href="@{/member/info(mNo=${user.mNo})}" style="text-decoration: none">
+                                        <img width="35" height="35" class="rounded-circle"
+                                             th:src="${#strings.equals(user.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${user.mNo}+'/'+${user.photo}}">
+                                        <span th:text="${user.nick}"></span><span th:text="${user.code}"
+                                                                                  class="text-muted"></span>
+                                    </a>
+                                    <th:block th:if="${chatUser.mNo != user.mNo}">
+                                        <button type="button" class="reportBtn btn btn-outline-danger rounded"
+                                                th:data="${user.userNo}">
+                                            <i class="fa-solid fa-hand-fist"></i>
+                                        </button>
+                                    </th:block>
+
+                                    <th:block th:if="${chatUser.mNo == user.mNo}">
+                                        <button class="btn btn-outline-info" id="modBtn">Modify
+                                            <i class="fa-solid fa-file-pen"></i></button>
+                                        <div class="input-group mb-1 mt-1" id="inputRoomTitleForm"
+                                             style="display: none">
+                                            <input type="text" class="form-control"
+                                                   aria-describedby="titleBtn" id="roomTitle" th:value="${roomTitle}">
+                                            <button class="btn btn-primary" type="button" id="titleBtn"
+                                                    th:data="${user.crNo}">change
+                                            </button>
+                                        </div>
+                                    </th:block>
+                                </div>
+                                <div class="accordion-body" th:each="user : ${chatUserList}" th:data="${user.userNo}"
+                                     th:nick="${user.nick}+${user.code}"
+                                     th:if="${user.mNo != chatRoom.admin}" th:crNo="${user.crNo}">
+                                    <a th:href="@{/member/info(mNo=${user.mNo})}" style="text-decoration: none">
+                                        <img width="35" height="35" class="rounded-circle"
+                                             th:src="${#strings.equals(user.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${user.mNo}+'/'+${user.photo}}">
+                                        <span th:text="${user.nick}"></span><span th:text="${user.code}"
+                                                                                  class="text-muted"></span>
+                                    </a>
+                                    <th:block th:if="${chatUser.mNo != user.mNo}">
+                                        <button type="button" class="reportBtn btn btn-outline-danger rounded"
+                                                th:data="${user.userNo}">
+                                            <i class="fa-solid fa-hand-fist"></i>
+                                        </button>
+                                    </th:block>
+                                    <th:block th:if="${chatUser.mNo == chatRoom.admin}">
+                                        <button type="button" class="kickBtn btn btn-outline-danger rounded">
+                                            <i class="fa-sharp fa-solid fa-person-walking-arrow-right"></i>
+                                        </button>
+                                        <button type="button" class="kingBtn btn btn-outline-info rounded">
+                                            <i class="fa-solid fa-chess-king"></i>
+                                        </button>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+                <th:block th:if="${chatRoom.getGroupChat == 'n'}">
+                    <span th:text="${roomTitle}"></span>
+                    <button type="reportBtn button" class="btn btn-outline-danger rounded justify-content-end"
+                            id="reportChatRoom" th:data="${targetUserNo}">
+                        <i class="fa-solid fa-hand-fist"></i>
+                    </button>
+                </th:block>
+            </h3>
+            <div class="card-body" style="overflow: scroll; height: 500px; width: 100%;"
+                 id="chatBody">
+
+            </div>
+
+            <div class="card-footer">
+                <div class="form-group">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="채팅을 입력하세요"
+                               aria-describedby="sendBtn" id="textBox">
+                        <button class="btn btn-primary" type="button" id="sendBtn"><i
+                                class="far fa-paper-plane fa-2x mb-2 text-white"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div align="center" th:if="${chatRoom.getGroupChat == 'n'}">
+        <button type="button" class="btn btn-danger" id="leaveBtn" th:data="${chatRoom.crNo}">채팅방 떠나기</button>
+    </div>
+    <div align="center" th:if="${chatRoom.getGroupChat == 'y'}">
+        <button type="button" class="btn btn-danger" id="leaveGroupBtn" th:data="${chatRoom.crNo}">채팅방 떠나기</button>
+    </div>
+</div>
+<div class="modal" id="reportModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">채팅 신고하기</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="modalSelect" class="form-label mt-4">신고 사유</label>
+                <select class="form-select" id="modalSelect">
+                    <option value="1">1. 부적절한 프로필 사진</option>
+                    <option value="2">2. 부적절한 내용 혹은 욕설</option>
+                    <option value="3">3. 기타</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="reportModalSubmit">Report!</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="fragments/footer :: footerFragment"></div>
+</body>
+<script th:inline="javascript">
+
+    $(document).ready(function () {
+        // 화면에 보이는 nick
+        const mNo = [[${#session.getAttribute('mNo')}]];
+
+        $("#sendBtn").on("click", function () {
+            send();
+        });
+        $("#textBox").keydown(function (key) {
+            // 엔터키 눌러서 메세지 전송
+            if (key.keyCode == 13) {
+                send();
+            }
+        });
+
+        // const websocket = new WebSocket("ws://3.39.44.182:8080/ws/chat");
+        const websocket = new WebSocket("wss://travelchatportfolio.click/ws/chat");
+        websocket.onmessage = onMessage; // 소켓이 메세지를 받을 때
+        websocket.onopen = onOpen;  // 소켓이 생성될때(클라이언트 접속)
+        websocket.onclose = disconnect; // 소켓이 닫힐때(클라이언트 접속해제)
+
+        //채팅창에 들어왔을 때
+        function onOpen() {
+            register();
+            enter();
+        }
+
+        //채팅방에 들어왔을 때 사용자 등록
+        function register() {
+            let msg = {
+                type: "chatRoom",
+                userNo: String([[${chatUser.userNo}]]),
+                chatRoomNo: String([[${chatUser.chNo}]])
+            }
+            websocket.send(JSON.stringify(msg));
+        }
+
+        function disconnect() {
+            websocket.close();
+        }
+
+        function enter() {
+            let msg = {
+                type: "enter",
+                enterType: "chatRoom",
+                userNo: String([[${chatUser.userNo}]]),
+                chatRoomNo: String([[${chatUser.chNo}]])
+            }
+
+            websocket.send(JSON.stringify(msg));
+        }
+
+        function send() {
+
+            let msg = {
+                type: "chat",
+                userNo: String([[${chatUser.userNo}]]),
+                chatRoomNo: String([[${chatUser.crNo}]]),
+                message: $('#textBox').val()
+            };
+
+            websocket.send(JSON.stringify(msg));
+
+            $('#textBox').val("");//메세지에 입력한 글 지우기
+        }
+
+        function onMessage(event) {
+            let msg = event.data; // 메세지는 event의 data 속성으로 들어온다.
+
+            if (msg.includes("<div class=\"pastMsg\"></div>")) {
+                // 불러오기전 본 마지막 메세지 번호
+                let lastChatNo = $("#chatBody").children().first().attr("id");
+                prependMsg(msg);
+                let offset = $("#" + lastChatNo).offset();
+                $("#chatBody").animate({scrollTop: (offset.top - $("#chatBody").height() / 2)}, 500);
+                $(".pastMsg").remove();
+            } else if (msg.includes("LEAVE_ERR")) { // 채팅방 떠나기 오류
+                alert("채팅방 떠나기가 실패하였습니다. 다시 시도하여주세요. 반복적으로 발생시 문의바랍니다.");
+
+            } else if (msg.includes("LEAVE_SUCCESS")) {
+
+                alert("채팅방을 떠납니다.");
+                location.replace("/chat/list");
+            } else if (msg.includes("<div class=\"someoneReadMsg\" data=\"")) { // 누군가 메세지를 읽었을 때
+                $("#chatBody").prepend(msg);
+                let str = $(".someoneReadMsg").attr("data");
+                let strArr = str.split("_");
+                for (let i = 0; i < strArr.length; i++) {
+                    let original = Number($("#unreadCount" + strArr[i]).text());
+                    if (original == 1) {
+                        $("#unreadCount" + strArr[i]).remove();
+                    } else {
+                        $("#unreadCount" + strArr[i]).text(original - 1);
+                    }
+                }
+                $(".someoneReadMsg").remove();
+
+            } else if (msg == "kickedOut") {
+                alert("해당 채팅방에서 추방 당하셨습니다.");
+                location.href = "/chat/list";
+
+            } else if (msg == "someBodyKickedOut") {
+
+                location.reload();
+            } else if (msg == "inheritKing") {
+                $('#chatRoomHeader').load(location.href + ' .accordion');
+            } else if (msg == "ALONE_AT_ROOM") {
+                alert("혼자인 채팅방에는 메세지를 남길 수 없습니다.");
+            } else {
+                appendMsg(msg);
+                if (!msg.includes("<div class=\"breadcrumb-item active\">여기까지 읽으셨습니다.</div>")) {
+
+                    let objDiv = document.getElementById('chatBody');
+                    //채팅창에 글이 꽉차면 최신길이 하단에 보이게. 이게 없으면 scroll bar를 움직여야 최신글이 보인다
+                    objDiv.scrollTop = objDiv.scrollHeight;
+
+                } else {
+                    //읽은 메세지가 있는 경우 그 위치부터 보여주기
+                    let offset = $("#unreadPoint").offset();
+                    $("#chatBody").animate({scrollTop: (offset.top - $("#chatBody").height() / 2)}, 500);
+                }
+            }
+            // 에러 메세지가 왔을 때
+            if (msg == "MSG_SEND_ERR") {
+                alert("메세지 전송에 실패하였습니다. 다시 시도해주세요");
+            }
+        }
+
+        $("#chatBody").scroll(function () {
+            let scrollTop = $("#chatBody").scrollTop();
+            if (scrollTop == 0) {
+                // 지난 메세지 10개 가져오기
+                let lastChatNo = $("#chatBody").children().first().attr("id");
+                if (lastChatNo != null) {
+                    let msg = {
+                        type: "pastMsg",
+                        userNo: String([[${chatUser.userNo}]]),
+                        chatRoomNo: String([[${chatUser.crNo}]]),
+                        lastChatNo: lastChatNo
+                    }
+
+                    websocket.send(JSON.stringify(msg));
+                }
+
+            }
+        });
+
+        function prependMsg(msg) {
+            // 지난 메세지 불러오기
+            $("#chatBody").prepend(msg);
+        }
+
+        function appendMsg(msg) {
+            $("#chatBody").append(msg); // 메세지 붙이고 줄바꿈
+        }
+
+        function leaveChat() {
+            let msg = {
+                type: "leaveChat",
+                mNo: String([[${chatUser.mNo}]]),
+                userNo: String([[${chatUser.userNo}]]),
+                chatRoomNo: String([[${chatUser.crNo}]])
+            }
+            websocket.send(JSON.stringify(msg));
+
+        }
+
+        function giveKing() {
+            let msg = {
+                type: "giveKing",
+                mNo: String([[${chatUser.mNo}]]),
+                userNo: String([[${chatUser.userNo}]]),
+                chatRoomNo: String([[${chatUser.crNo}]])
+            }
+            websocket.send(JSON.stringify(msg));
+        }
+
+        $("#leaveBtn").on("click", function () {
+            if (confirm("채팅방을 떠나시겠습니까?")) {
+                leaveChat();
+            }else{
+                alert("취소 되었습니다.");
+            }
+
+        });
+        $("#leaveGroupBtn").on("click", function () {
+            if (confirm("채팅방을 떠나시겠습니까?")) {
+                let crNo = $(this).attr("data");
+                $.ajax({
+                    type: 'GET',       // 요청 메서드
+                    url: '/chat/checkKing?crNo=' + crNo + '&target=' + mNo,  // 요청 URI
+                    success: function (result) {
+                        if (result == "WRONG_TARGET") {
+                            alert("잘못된 요청 입니다. 확인하시고 다시 시도하여 주세요.");
+
+                        } else if (result == "isKing") {
+                            if (confirm("나가시면 가장 오래된 멤버에게 방장의 권한이 이양됩니다.")) {
+                                giveKing();
+                                leaveChat();
+                            }
+                            location.href = "/chat/list";
+                        } else if (result == "FAIL_TITLE") {
+                            alert("변경 실패, 다시 시도하여주세요");
+                            location.reload();
+                        } else if (result == "NotKing"){
+                            leaveChat();
+                        }
+                    },
+                    error: function () {
+                        alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                        location.reload();
+                    } // 에러가 발생했을 때, 호출될 함수
+
+                });
+            }
+            // leaveChat();
+        });
+
+        $(document).on("click", "#modBtn", function () {
+            $("#inputRoomTitleForm").css("display", "");
+        })
+        $(document).on("click", "#titleBtn", function () {
+            let roomTitle = $("#roomTitle").val();
+            let crNo = $(this).attr("data");
+            $.ajax({
+                type: 'PATCH',       // 요청 메서드
+                url: '/chat/changeTitle',  // 요청 URI
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                data: JSON.stringify({crTitle: roomTitle, crNo: crNo}),
+                success: function (result) {
+                    if (result == "WRONG_ADMIN") {
+                        alert("권한이 없습니다.");
+
+                    } else if (result == "SUCCESS_TITLE") {
+                        alert("변경 완료");
+                        $('#chatRoomHeader').load(location.href + ' .accordion');
+
+                    } else if (result == "FAIL_TITLE") {
+                        alert("변경 실패, 다시 시도하여주세요");
+                        location.reload();
+                    }
+
+                },
+                error: function () {
+                    alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                    location.reload();
+                } // 에러가 발생했을 때, 호출될 함수
+
+            });
+        });
+        $(document).on("click", ".kickBtn", function () {
+            let nickCode = $(this).parent().attr("nick");
+            if (confirm(nickCode + "님을 정말로 추방하시겠어요?")) {
+                let target = $(this).parent().attr("data");
+
+                $.ajax({
+                    type: 'GET',       // 요청 메서드
+                    url: '/chat/kickUser?target=' + target,  // 요청 URI
+                    success: function (result) {
+                        if (result == "WRONG_ADMIN") {
+                            alert("권한이 없습니다.");
+
+                        } else if (result == "SUCCESS_KICK") {
+                            alert("추방 완료");
+
+                            // $('#chatRoomHeader').load(location.href+' .accordion');
+                            kickUserOut(target);
+                            location.reload();
+                        } else if (result == "FAIL_KICK") {
+                            alert("추방 실패, 다시 시도하여주세요");
+                            location.reload();
+                        }
+
+                    },
+                    error: function () {
+                        alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                        location.reload();
+                    } // 에러가 발생했을 때, 호출될 함수
+
+                });
+            }
+        });
+
+        $("#reportChatRoom, .reportBtn").on("click", function () {
+            let userNo = $(this).attr("data");
+            $('#reportModal').modal('show');
+            $('#reportModalSubmit').attr("userNo", userNo);
+        });
+
+        $(document).on("click", "#reportModalSubmit", function () {
+            let userNo = $(this).attr("userNo");
+            let selectedValue = $("#modalSelect option:selected").val();
+            let type = 3;
+            reportAjax(userNo, selectedValue, type);
+            $('#reportModal').modal('hide');
+        });
+
+        function reportAjax(evidence, selectedValue, type) {
+            $.ajax({
+                url: "/report",
+                type: "POST",
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                data: JSON.stringify({type: type, evidence: evidence, reason: selectedValue}),
+                success: function (data) {
+                    if (data == "SUCCESS") {
+                        alert("신고가 완료되었습니다.")
+                    } else if (data == "ALREADYDONE") {
+                        alert("신고가 접수되어 검토 중입니다.")
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                }
+            });
+        }
+
+        function kickUserOut(target) {
+            let msg = {
+                type: "kickUserOut",
+                target: target
+            }
+            websocket.send(JSON.stringify(msg));
+        }
+
+        function inheritKing(target) {
+            let msg = {
+                type: "inheritKing",
+                target: target
+            }
+            websocket.send(JSON.stringify(msg));
+        }
+
+        $(document).on("click", ".kingBtn", function () {
+            let nickCode = $(this).parent().attr("nick");
+            if (confirm(nickCode + "님을 방장으로 임명하시겠어요?")) {
+                let target = $(this).parent().attr("data");
+
+                $.ajax({
+                    type: 'GET',       // 요청 메서드
+                    url: '/chat/inherit?target=' + target,  // 요청 URI
+                    success: function (result) {
+                        if (result == "WRONG_ADMIN") {
+                            alert("권한이 없습니다.");
+
+                        } else if (result == "SUCCESS_KING") {
+                            alert(nickCode + "님이 방장으로 임명되었습니다.");
+                            inheritKing(target);
+                            $('#chatRoomHeader').load(location.href + ' .accordion');
+
+                        } else if (result == "FAIL_KING") {
+                            alert("임명 실패, 다시 시도하여주세요");
+                            location.reload();
+                        }
+
+                    },
+                    error: function () {
+                        alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                        location.reload();
+                    } // 에러가 발생했을 때, 호출될 함수
+
+                });
+            }
+        });
+    })
+</script>
+</html>

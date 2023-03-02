@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.common.repository.CommentRepository">
+    <insert id="insertComment" parameterType="Comment" >
+        insert into Comment (feedNo, level, writer, content, createTime, del) values (#{feedNo}, 0 , #{writer}, #{content}, now(), 'n')
+        <selectKey keyProperty="cno" resultType="int" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <update id="insertPcno" parameterType="Comment">
+        update Comment set pcno = #{cno} where cno = #{cno}
+    </update>
+    <select id="selectCommentListByFeedNo" parameterType="integer" resultType="Comment">
+        select cm.cno,cm.feedNo, cm.pcno, cm.level, cm.writer, cm.content, m.nick, ifnull(p.photo, 'none') as photo
+        from comment cm, member m, profile p
+        where cm.feedNo = #{feedNo} and p.mNo = cm.writer and m.mNo = p.mNo and cm.del = 'n' order by pcno asc, cno asc;
+    </select>
+    <update id="updateComment" parameterType="Comment">
+        update Comment set content = #{content} where cno = #{cno}
+    </update>
+    <select id="selectCommentByCno" parameterType="integer" resultType="Comment">
+        select * from Comment where cno = #{cno}
+    </select>
+    <update id="deleteComment" parameterType="Comment">
+        update Comment set del = 'y' where cno = #{cno}
+    </update>
+    <update id="deleteComments" parameterType="Comment">
+        update Comment set del = 'y' where pcno = #{cno}
+    </update>
+    <insert id="insertRepliedComment" parameterType="Comment" >
+        insert into Comment (feedNo, pcno, level, writer, content, createTime, del) values (#{feedNo}, #{pcno}, 1,#{writer}, #{content}, now(), 'n')
+
+    </insert>
+    <select id="countRepliedCommentByCNo" parameterType="comment" resultType="integer">
+        select count(*) from Comment where pcno = #{cno} and del = 'n'
+    </select>
+
+</mapper>

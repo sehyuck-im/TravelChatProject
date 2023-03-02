@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="container mb-5">
+        <div class="row mt-2"></div>
+        <div class="row mt-5">
+            <div class="col-9"></div>
+            <div class="col-2">
+                <a class="btn btn-outline-primary" href="/board/form">Write</a>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-2"></div>
+            <div class="col-8">
+                <table class="table table-hover">
+                    <thead>
+                    <tr class="text-center">
+                        <th class="col-2 text-start">글번호</th>
+                        <th class="col-5">제목</th>
+                        <th class="col-5">작성자</th>
+
+                    </tr>
+                    </thead>
+                    <tbody th:if="${!#lists.isEmpty(boardList)}">
+                    <th:block th:each="board : ${boardList}">
+                        <tr class="table-light">
+                            <th scope="row" th:text="${board.bNo}"></th>
+                            <td class="text-center"><a th:text="${board.title}" th:href="'/board/'+${board.bNo}"
+                                                       style="text-decoration: none"></a></td>
+                            <td class="text-center">
+                                <img width="25" height="25" class="rounded-circle"
+                                     th:src="${#strings.equals(board.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${board.writer}+'/'+${board.photo}}">
+                                <span th:text="${board.nick}"></span>
+                            </td>
+                        </tr>
+                    </th:block>
+                    </tbody>
+                    <tbody th:if="${#lists.isEmpty(boardList)}">
+                    <tr class="table-light">
+                        <th colspan="3"><h4 class="text-center">게시물이 없습니다.</h4></th>
+
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+        <div class="row mt-3">
+            <div th:if="${totalCount !=null && totalCount!=0}">
+                <ul class="pagination">
+                    <li class="page-item" th:classappend="${ph.showPrev}?'':disabled">
+                        <a class="page-link" th:href="'/board'+${ph.sc.getQueryString(ph.beginPage-10)}">&laquo;</a>
+                    </li>
+                    <li class="page-item" th:each="i : ${#numbers.sequence(ph.beginPage, ph.endPage)}"
+                        th:classappend="${i eq ph.sc.page}? active : ''">
+                        <a class="page-link" th:href="'/board'+${ph.sc.getQueryString(i)}" th:text="${i}"></a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${ph.showNext}?'':disabled">
+                        <a class="page-link" th:href="'/board'+${ph.sc.getQueryString(ph.beginPage+10)}">&raquo;</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-4"></div>
+            <div class="col-4">
+                <form th:action="'/board'" method="get" class="form-group">
+                    <div class="input-group mb-3">
+                        <div class="form-group">
+                            <select class="form-select" name="option">
+                                <option value="A" th:selected="${ph.sc.option=='A'||ph.sc.option==''? true:false}">
+                                    제목+내용
+                                </option>
+                                <option value="T" th:selected="${ph.sc.option=='T'}?true:false">제목</option>
+                                <option value="C" th:selected="${ph.sc.option=='C'}?true:false">내용</option>
+                            </select>
+                        </div>
+                        <input type="text" class="form-control ms-2"
+                               aria-describedby="searchBtn" name="keyword" th:value="${ph.sc.keyword}">
+                        <button class="btn btn-primary" type="submit" id="searchBtn-addon2">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments/footer :: footerFragment"></div>
+</body>
+
+</html>

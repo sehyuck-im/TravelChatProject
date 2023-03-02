@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <div th:replace="fragments/config :: configFragment"></div>
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let result = [[${result}]];
+    /*]]>*/
+    if(result == -1){
+        alert("잘못된 요청입니다. 다시 시도하세요.")
+        history.back();
+    }
+</script>
+</html>

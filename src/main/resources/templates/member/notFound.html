@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <div th:replace="fragments/config :: configFragment"></div>
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let result = [[${result}]];
+    /*]]>*/
+    if(result == 1){
+        alert("없는 회원입니다 확인하시고 다시 시도해주세요");
+        history.back();
+    }
+</script>
+</html>

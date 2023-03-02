@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.chat.repository.ChatRoomRepository">
+    <insert id="createChatRoom" useGeneratedKeys="true" keyProperty="crNo" parameterType="ChatRoom">
+        insert into ChatRoom (groupChat, updateTime, crDel) values ('n', now() ,'n')
+    </insert>
+    <select id="selectChatRoom" resultType="ChatRoom">
+        select * from ChatRoom where crNo = (select max(crNo) from ChatRoom)
+    </select>
+    <select id="selectChatRoomByCrNo" resultType="ChatRoom" parameterType="integer">
+        select * from ChatRoom where crNo = #{crNo} and crDel = 'n'
+    </select>
+    <update id="updateTimeAtChatRoom" parameterType="integer">
+        update chatRoom set updateTime = now() where crNo = #{crNo}
+    </update>
+    <insert id="createGroupChatRoom" useGeneratedKeys="true" keyProperty="crNo" parameterType="ChatRoom">
+        insert into ChatRoom (crTitle, groupChat, admin, updateTime, crDel) values (#{crTitle},'y', #{admin},now() ,'n')
+    </insert>
+    <select id="selectAdmin" parameterType="integer" resultType="integer">
+        select admin from chatRoom where crNo = #{crNo}
+    </select>
+    <update id="updateCrTitle" parameterType="ChatRoom">
+        update chatRoom set crTitle=#{crTitle} where crNo = #{crNo}
+    </update>
+    <update id="changeKing" parameterType="ChatUser">
+        update chatRoom set admin = #{mNo} where crNo = #{crNo}
+    </update>
+</mapper>

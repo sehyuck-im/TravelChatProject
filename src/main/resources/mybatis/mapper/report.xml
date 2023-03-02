@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.member.repository.ReportRepository">
+    <insert id="insertReport" parameterType="Report">
+        insert into Report (type, reason, evidence, reporter, target, chk, reportTime) values (#{type}, #{reason}, #{evidence}, #{reporter}, #{target}, 'n', now())
+    </insert>
+    <select id="isReportCount" parameterType="Report" resultType="integer">
+        select count(*) from Report where type = #{type} and evidence = #{evidence} and reporter = #{reporter} and target = #{target} and chk = 'n'
+    </select>
+    <select id="countAllUnchecked" resultType="integer">
+        select count(*) from Report where chk = 'n'
+    </select>
+    <select id="selectByReportNo" resultType="Report" parameterType="integer">
+        select * from Report where reportNo = #{reportNo}
+    </select>
+</mapper>

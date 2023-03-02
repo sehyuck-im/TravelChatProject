@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+    <title>Title</title>
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+
+    <div class="container mt-2">
+        <div class="row">
+            <div class="col-2"></div>
+            <div class="col-8">
+                <img src="../images/main.png" style="max-width: 100%; height: auto;">
+
+            </div>
+            <div class="col-2"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-4"></div>
+            <div class="col-4">
+                <div class="input-group mb-3">
+
+                    <input type="text" class="form-control" placeholder="Let's High Five!" id="searchValue">
+                    <button class="input-group-text" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+            </div>
+            <div class="col-4"></div>
+        </div>
+
+    </div>
+
+
+</div>
+<div th:replace="fragments/footer :: footerFragment"></div>
+
+
+</body>
+
+<script th:inline="javascript">
+    $("#searchBtn").on("click", function () {
+       let value = $("#searchValue").val();
+       location.href="/board?option=A&keyword="+value;
+    });
+</script>
+</html>

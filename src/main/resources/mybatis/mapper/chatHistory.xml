@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.chat.repository.ChatHistoryRepository">
+
+    <insert id="insertFirstMessage" parameterType="ChatHistory" useGeneratedKeys="true" keyProperty="chNo">
+        insert into ChatHistory (crNo, userNo, message, readCount)
+        values (#{crNo}, 0, '대화를 시작합니다', #{readCount})
+    </insert>
+
+    <insert id="insertMessage" parameterType="ChatHistory" useGeneratedKeys="true" keyProperty="chNo">
+        insert into ChatHistory (crNo, userNo, message, readCount)
+        values (#{crNo}, #{userNo}, #{message}, #{readCount})
+    </insert>
+    <select id="getUnreadCnt" parameterType="chatUser" resultType="integer">
+        select count(*)
+        from chatHistory
+        where crNo = #{crNo}
+          and chNo > #{chNo}
+
+    </select>
+    <select id="selectLast10Msg" parameterType="ChatHistory" resultType="ChatHistory">
+        select ch.*
+        from (
+                 select *
+                 from ChatHistory
+                 where crNo = #{crNo}
+                   and <![CDATA[ chNo >= #{joinPoint} ]]>
+                 order by chNo desc limit 10
+
+            ) ch
+        order by chNo asc
+    </select>
+
+    <select id="selectPast10Msg" parameterType="ChatHistory" resultType="ChatHistory">
+        select ch.*
+        from (
+                 select *
+                 from ChatHistory
+                 where crNo = #{crNo}
+                    and
+                    <![CDATA[ chNo < #{chNo} ]]>
+                 and <![CDATA[ chNo >= #{joinPoint} ]]>
+                 order by chNo desc limit 10
+
+             ) ch
+        order by chNo asc
+    </select>
+
+    <select id="selectUnreadMsg" parameterType="ChatHistory" resultType="ChatHistory">
+        select ch.*
+        from (
+                select *
+                from ChatHistory
+                where crNo = #{crNo} and <![CDATA[ chNo >= #{joinPoint} ]]>
+                order by chNo desc limit #{limit}
+                 ) ch
+        order by chNo asc
+    </select>
+    <select id="selectReadMsg" parameterType="ChatHistory" resultType="ChatHistory">
+        select ch.*
+            from (
+                    select *
+                    from ChatHistory
+                    where crNo = #{crNo} and
+                         <![CDATA[ chNo <= #{chNo}  ]]>
+                    and <![CDATA[ chNo >= #{joinPoint} ]]>
+                    order by chNo desc limit 10
+                ) ch
+        order by chNo asc;
+    </select>
+    <select id="selectMaxChNo" parameterType="integer" resultType="integer">
+        select max(chNo) from chatHistory where crNo = #{crNo};
+    </select>
+    <update id="updateReadCount" parameterType="ChatHistory">
+
+        update ChatHistory
+        set readCount = readCount - 1
+        where chNo > #{limit} and <![CDATA[ chNo <= #{chNo}  ]]>
+        and crNo = #{crNo}
+
+    </update>
+    <select id="selectLastChatAtChatRoom" parameterType="integer" resultType="ChatHistory">
+        select m.nick, temp.* from member m, (select * from chathistory where chNo = (select max(chNo) from chatHistory where crNo = #{crNo})) temp,
+                                   (select * from chatUser where crNo = #{crNo}) cu where temp.userNo = cu.userNo and m.mNo = cu.mNo;
+    </select>
+    <select id="selectLastMsgSendUserNo" parameterType="integer" resultType="integer">
+        select userNo from chatHistory where chNo = (select max(chNo) from chatHistory where crNo = #{crNo})
+    </select>
+    <select id="selectSystemMsgByCrNo" parameterType="integer" resultType="String">
+        select message from chatHistory where chNo = (select max(chNo) from chatHistory where crNo = #{crNo})
+    </select>
+    <insert id="sendOutMsg" parameterType="ChatHistory" useGeneratedKeys="true" keyProperty="chNo">
+        insert into chatHistory (crNo, userNo, message, readCount)
+        values (#{crNo}, 0, #{message}, #{readCount})
+    </insert>
+    <select id="selectMsgByChNo" parameterType="integer" resultType="ChatHistory">
+        select * from ChatHistory where chNo = #{chNo}
+    </select>
+    <insert id="insertGroupMsg" parameterType="ChatHistory" useGeneratedKeys="true" keyProperty="chNo">
+        insert into ChatHistory (crNo, userNo, message, readCount)
+        values (#{crNo}, 0, '대화방이 생성되었습니다. ', 0)
+    </insert>
+    <select id="countChatHistoryByCrNo" resultType="integer" parameterType="integer">
+        select count(*) from chatHistory where crNo = #{crNo}
+    </select>
+    <!--    test sql-->
+    <select id="selectPastMsg" parameterType="ChatHistory" resultType="ChatHistory">
+        select *
+        from ChatHistory
+        where crNo = #{crNo}
+          and chNo &lt; #{chNo}
+    </select>
+    <select id="selectLateMsg" parameterType="ChatHistory" resultType="ChatHistory">
+        select *
+        from ChatHistory
+        where crNo = #{crNo}
+          and <![CDATA[ chNo >= #{chNo}
+        ]]>
+    </select>
+    <select id="selectLastMsg" parameterType="ChatHistory" resultType="ChatHistory">
+        select *
+        from ChatHistory
+        where crNo = #{crNo}
+          and chNo = (select max(chNo) from ChatHistory where crNo = #{crNo})
+    </select>
+
+    <select id="selectLastChNo" parameterType="integer" resultType="integer">
+        select max(chNo)
+        from ChatHistory
+        where crNo = #{crNo}
+    </select>
+    <select id="selectMyLastRead" parameterType="integer" resultType="integer">
+        select max(chNo)
+        from ChatHistory
+        where userNo = #{userNo}
+    </select>
+    <insert id="insert" parameterType="ChatHistory">
+        insert into ChatHistory (crNo, userNo, message, readCount)
+        values (#{crNo}, #{userNo}, #{message}, #{readCount})
+    </insert>
+</mapper>

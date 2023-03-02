@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.chat.repository.ChatUserRepository">
+    <select id="selectByUserNo" parameterType="ChatUser" resultType="ChatUser">
+        select *
+        from ChatUser
+        where userNo = #{userNo}
+          and status = 'n'
+    </select>
+    <insert id="insertChatUser" parameterType="ChatUser">
+        insert into ChatUser (crNo, mNo, chNo, joinPoint, status)
+        values (#{crNo}, #{mNo}, #{chNo}, #{chNo}, 'n')
+    </insert>
+    <select id="selectTempUser" parameterType="ChatUser" resultType="ChatUser">
+        select *
+        from ChatUser
+        where crNo = #{crNo}
+          and mno = #{mNo}
+          and status = 'n'
+    </select>
+
+    <select id="selectByCrNo" parameterType="integer" resultType="ChatUser">
+        select cu.userNo, cu.crNo, cu.mNo, cu.chNo, cu.status, m.nick, ifnull(p.photo, 'none') photo
+        from chatUser cu,
+             profile p,
+             member m
+        where m.mNo = cu.mNo
+          and p.mNo = cu.mNo
+          and cu.crNo = #{crNo}
+        order by userNo asc
+    </select>
+
+    <select id="selectByCrNoNUsers" parameterType="integer" resultType="ChatUser">
+        select cu.userNo, cu.crNo, cu.mNo, cu.chNo, cu.status, m.nick, ifnull(p.photo, 'none') photo
+        from chatUser cu,
+             profile p,
+             member m
+        where m.mNo = cu.mNo
+          and p.mNo = cu.mNo
+          and cu.crNo = #{crNo}
+          and cu.status = 'n'
+        order by userNo asc
+    </select>
+    <select id="selectMNobyUserNo" parameterType="integer" resultType="integer">
+        select mNo
+        from chatUser
+        where userNo = #{userNo}
+          and status = 'n'
+    </select>
+
+    <select id="selectUser" parameterType="ChatUser" resultType="ChatUser">
+        select *
+        from ChatUser
+        where crNo = #{crNo}
+          and status = 'n'
+    </select>
+
+    <update id="updateChNo" parameterType="ChatUser">
+        update ChatUser
+        set chNo= #{chNo}
+        where userNo = #{userNo}
+          and status = 'n'
+    </update>
+
+    <select id="getCountAtChatRoom" parameterType="integer" resultType="integer">
+        select count(*)
+        from chatUser
+        where crNo = #{crNo}
+          and status = 'n'
+    </select>
+    <select id="selectChatUserListByMNo" parameterType="integer" resultType="ChatUser">
+        select *
+        from ChatUser
+        where mNo = #{mNo}
+          and status = 'n'
+    </select>
+    <select id="selectUserNoByMNoAndCrNo" parameterType="integer" resultType="integer">
+        select userNo
+        from ChatUser
+        where mNo = #{mNo}
+          and crNo = #{crNo}
+          and status = 'n'
+
+    </select>
+    <select id="getUserNick" parameterType="integer" resultType="string">
+        select m.nick
+        from member m,
+             chatUser cu
+        where cu.userNo = #{userNo}
+          and cu.mNo = m.mNo
+    </select>
+
+    <select id="selectChatUserListByMNoSortTime" parameterType="integer" resultType="ChatUser">
+        select cu.*
+        from ChatUser cu,
+             chatRoom cr
+        where cu.mNo = #{mNo}
+          and cu.status = 'n'
+          and cr.crNo = cu.crNo
+        order by cr.updateTime desc;
+    </select>
+
+    <select id="countUserNoByMNoAndCrNo" parameterType="integer" resultType="integer">
+        select count(*)
+        from chatUser
+        where mNo = #{mNo}
+          and crNo = #{crNo}
+          and status = 'n'
+    </select>
+
+    <update id="changeStatusOut" parameterType="ChatUser">
+        update ChatUser set status = 'y' where userNo = #{userNo}
+    </update>
+
+    <select id="countAllUserByMNo" resultType="integer" parameterType="integer">
+        select count(*) from chatUser where status = 'n' and mNo = #{mNo};
+    </select>
+
+    <update id="memberLeave" parameterType="integer">
+        update ChatUser set status = 'y' where mNo = #{mNo}
+    </update>
+    <!--    test sql-->
+    <insert id="insertFiveChatUser" parameterType="ChatUser">
+        insert into ChatUser (crNo, mNo, chNo)
+        values (#{crNo}, #{mNo}, #{chNo})
+    </insert>
+    <select id="selectThree" resultType="ChatUser" parameterType="ChatUser">
+        select *
+        from ChatUser
+        where crNo = #{crNo}
+          and <![CDATA[ mNo < 4
+        ]]>
+    </select>
+    <select id="selectFive" resultType="ChatUser" parameterType="ChatUser">
+        select *
+        from ChatUser
+        where crNo = #{crNo}
+    </select>
+    <update id="updateThreeChatUser" parameterType="ChatUser">
+        update ChatUser
+        set chNo = #{chNo}
+        where mNo = #{mNo}
+          and crNo = #{crNo}
+    </update>
+    <select id="selectByMno" parameterType="integer" resultType="ChatUser">
+        select *
+        from ChatUser
+        where mNo = #{mNo}
+    </select>
+    <select id="selectLastMsgNo" parameterType="integer" resultType="integer">
+        select chNo
+        from ChatUser
+        where userNo = #{userNo}
+    </select>
+    <update id="kickedOut" parameterType="ChatUser">
+        update chatUser set status = 'y' where userNo = #{userNo}
+    </update>
+    <select id="selectByUserNoWithOutStatus" parameterType="integer" resultType="ChatUser">
+        select * from ChatUser where userNo = #{userNo}
+    </select>
+    <select id="selectOldestUser" parameterType="integer" resultType="ChatUser">
+        select min(userNo) userNo from ChatUser where crNo = #{crNo} and userNo != #{userNo} and status = 'n'
+    </select>
+</mapper>

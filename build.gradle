@@ -1,0 +1,53 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+	id 'war'
+}
+
+group = 'com.TravelChat'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+apply plugin : 'war'
+
+bootWar{
+	archiveName("TravelChat.war")
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.4'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.json:json:20190722'
+	implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'mysql:mysql-connector-java'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// https://mvnrepository.com/artifact/nz.net.ultraq.thymeleaf/thymeleaf-layout-dialect
+	implementation group: 'nz.net.ultraq.thymeleaf', name: 'thymeleaf-layout-dialect', version: '3.1.0'
+	// https://mvnrepository.com/artifact/commons-io/commons-io file upload
+	implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+	// https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload file upload
+	implementation group: 'commons-fileupload', name: 'commons-fileupload', version: '1.4'
+
+
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

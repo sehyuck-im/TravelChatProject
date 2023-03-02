@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.chat.repository.ChatRepository">
+
+    <insert id="createRequest" parameterType="ChatRequest">
+        insert into ChatRequest (sender,receiver) values (#{sender},#{receiver})
+    </insert>
+    <select id="selectChatRequestCnt" parameterType="ChatRequest" resultType="integer">
+        select  ifnull(count(*), 0) from ChatRequest where sender = #{sender} and receiver = #{receiver}
+    </select>
+    <select id="selectReceivedRequest" parameterType="integer" resultType="ChatRequest">
+        select * from ChatRequest where receiver = #{mNo} order by requestNo desc
+    </select>
+    <select id="selectReceivedRequestCnt" parameterType="integer" resultType="integer">
+        select ifnull(count(*), 0) from ChatRequest where reveiver = #{mNo}
+    </select>
+    <select id="selectChatRequest" parameterType="integer" resultType="ChatRequest">
+        select * from ChatRequest where requestNo = #{requestNo}
+    </select>
+    <delete id="deleteChatRequest" parameterType="integer">
+        delete from ChatRequest
+        where requestNo = #{requestNo}
+    </delete>
+    <select id="selectChatRequestBySenderAndReceiver" parameterType="ChatRequest" resultType="ChatRequest">
+        select * from chatRequest where sender = #{sender} and receiver = #{receiver}
+    </select>
+    <select id="getReceivedChatRequest" parameterType="integer" resultType="integer">
+        select count(*) from chatRequest where receiver = #{mNo}
+    </select>
+    <select id="getRequestCountByRequestNo" resultType="integer" parameterType="integer">
+        select count(*) from chatRequest where requestNo = #{requestNo}
+    </select>
+    <select id="countHighFiveRequestByMNoAndCrNo" resultType="integer" parameterType="integer">
+        select count(*) from HighFiveRequest where crNo = #{crNo} and sender = #{mNo}
+    </select>
+    <insert id="insertHighFiveRequest" parameterType="highFiveRequest" useGeneratedKeys="true" keyProperty="requestNo">
+        insert into highFiveRequest (crNo, sender, receiver) values (#{crNo}, #{sender}, #{receiver})
+    </insert>
+    <select id="countHighFiveRequestByMNo" parameterType="integer" resultType="integer">
+        select count(*) from highFiveRequest where receiver = #{mNo}
+    </select>
+    <select id="selectHighFiveRequestList" parameterType="integer" resultType="highFiveRequest">
+        select * from highFiveRequest where receiver = #{mNo} order by requestNo desc
+    </select>
+    <select id="selectHighFiveRequestByRequestNo" parameterType="integer" resultType="highFiveRequest">
+        select * from highFiveRequest where requestNo = #{requestNo}
+    </select>
+    <delete id="deleteHighFiveRequest" parameterType="highFiveRequest">
+        delete from highFiveRequest where requestNo = #{requestNo}
+    </delete>
+    <select id="countHighFiveRequestByRequestNo" resultType="integer" parameterType="integer">
+        select count(*) from highFiveRequest where requestNo = #{requestNo}
+    </select>
+    <select id="selectHighFiveRequestBySenderAndCrNo" parameterType="integer" resultType="highFiveRequest">
+        select * from highFiveRequest where sender = #{sender} and crNo = #{crNo}
+    </select>
+</mapper>

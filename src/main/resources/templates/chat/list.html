@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="container mb-5">
+        <div class="row mt-4">
+            <div class="col-3"></div>
+            <div class="col-6">
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                받은 채팅 요청 <span class="badge bg-primary rounded-pill ms-2" id="requestCnt"
+                                               th:text="${#lists.size(requestList)}"></span>
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                             data-bs-parent="#accordionExample" style="">
+                            <div class="accordion-body" id="accordion-body">
+                                <div class="card mt-2" th:each="request : ${requestList}"
+                                     th:if="${!#lists.isEmpty(requestList)}" th:id="request+${request.requestNo}">
+<!--                                    <a style="text-decoration: none;"></a>-->
+                                    <div class="card-body">
+                                        <h4 class="card-title">
+                                            <a th:href="@{/member/info(mNo=${request.sender})}"
+                                               style="text-decoration: none">
+                                                <img width="35" height="35" class="rounded-circle"
+                                                     th:src="${#strings.equals(request.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${request.sender}+'/'+${request.photo}}">
+                                            </a><span th:text="${request.nick}"></span><span th:text="${request.code}"
+                                                                                             class="text-muted"></span>님으로
+                                            부터 채팅 요청이 왔습니다.
+                                        </h4>
+                                        <div align="center" th:data="${request.nick}+${request.code}">
+                                            <button type="button" class="acceptBtn btn btn-outline-secondary"
+                                                    th:data="${request.requestNo}+','+accept">수락
+                                            </button>
+                                            <button type="button" class="declineBtn btn btn-outline-danger"
+                                                    th:data="${request.requestNo}+','+decline">거절
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card mt-2" th:if="${#lists.isEmpty(requestList)}" id="noMoreRequest">
+                                    <div class="card-body">
+                                        <h4 class="card-title">
+                                            받은 요청이 없습니다.
+                                        </h4>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+        <div id="chatRoomListDiv">
+
+
+        </div>
+
+    </div>
+</div>
+<div th:replace="fragments/footer :: footerFragment"></div>
+</body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let msg = [[${msg}]];
+    /*]]>*/
+
+    $(function () {
+        const mNo = [[${#session.getAttribute('mNo')}]];
+        // const websocket = new WebSocket("ws://3.39.44.182:8080/ws/chat");
+        const websocket = new WebSocket("wss://travelchatportfolio.click/ws/chat");
+        websocket.onopen = onOpen;  // 소켓이 생성될때(클라이언트 접속)
+        websocket.onmessage = onMessage;
+        websocket.onclose = onClose;
+
+        function onOpen() {
+            register();
+            enter();
+        }
+
+        //채팅 리스트에 들어왔을 때 사용자 등록
+        function register() {
+            let msg = {
+                type: "chatList",
+                mNo: String(mNo)
+
+            }
+            websocket.send(JSON.stringify(msg));
+        }
+        function onClose(){
+            websocket.close();
+        }
+        function enter() {
+            let msg = {
+                type: "enter",
+                enterType: "chatList",
+                alertType: "enterList",
+                mNo: String(mNo)
+            }
+
+            websocket.send(JSON.stringify(msg));
+        }
+
+        function onMessage(event) {
+            let msg = event.data; // 메세지는 event의 data 속성으로 들어온다.
+            // 입장시 메세지를 불러오는 건지 알림으로 들어오는건지 구분
+
+            if (msg.includes("<div data=\"chatRoomList\"></div>")) {
+                // chat list에 입장해서 불러온 경우
+                appendChatRoom(msg);
+            } else if (msg.includes("chatRoomListAlert_")) { // 채팅방 알람이 왔을 때
+                prependChatRoom(msg);
+                let splitStr = $("#chatRoomListDiv").children().attr("id");
+                let strArray = splitStr.split("_");
+                let targetCrNo = strArray[1];
+
+                $("#"+targetCrNo).remove();
+                $("#"+splitStr).remove();
+
+            } else if(msg.includes("<div class=\"chatRoomListAlert\"></div>")){
+
+                prependChatRoom(msg);
+                $(".chatRoomListAlert").remove();
+
+            } else if(msg.includes("<div class=\"chatRoomCreated\"></div>")){ // 채팅방이 생성되었을 때
+                prependChatRoom(msg);
+                $(".chatRoomCreated").remove();
+
+            } else if(msg.includes("<div class=\"receivedChatRequest\"></div>")){ // 채팅 요청이 왔을 때
+
+                // accordion-body 지역 새로고침
+                prependChatRequest(msg);
+
+                $(".receivedChatRequest").remove();
+                let requestCount = Number($("#requestCnt").text());
+                if(requestCount == 0){
+                    $("#noMoreRequest").remove();
+                }
+                $("#requestCnt").text(requestCount+1);
+                
+            } else if(msg == "kickedOut"){
+                // 강퇴 당했을 때
+                location.reload();
+            } else if(msg == "someBodyKickedOut"){
+                location.reload();
+            }
+
+
+            // 에러 메세지가 왔을 때
+            if (msg == "MSG_SEND_ERR") {
+                alert("메세지 전송에 실패하였습니다. 다시 시도해주세요");
+            }
+        }
+
+        function appendChatRoom(msg) {
+            // 채팅방 리스트 붙여주기
+            $("#chatRoomListDiv").append(msg);
+        }
+        function prependChatRoom(msg) {
+            // 채팅방 위에 붙여주기
+            $("#chatRoomListDiv").prepend(msg);
+        }
+        function prependChatRequest(msg){
+            // 요청 붙여주기
+            $("#accordion-body").prepend(msg);
+
+        }
+
+        function responseRequest(){ // 헤더에서 카운트 줄여주기
+            let responseRequest = {
+                type: "responseRequest",
+                mNo : String(mNo)
+            }
+            websocket.send(JSON.stringify(responseRequest));
+        }
+
+        $(document).on("click", ".acceptBtn, .declineBtn" ,function () { // 수락, 거절 버튼을 눌렀을 때
+
+            let dataArr = $(this).attr("data").split(",");
+            let sender = $(this).parent().attr("data");
+
+            let requestNo = dataArr[0];
+            let type = dataArr[1];
+            let requestCnt = Number($("#requestCnt").text());
+
+            $.ajax({
+                url: "/chat/responseRequest?requestNo=" + requestNo + "&type=" + type,
+                type: "GET",
+                success: function (data) {
+                    if (data.includes("ACCEPT")) {
+                        alert(sender + "님과 채팅을 시작 합니다.");
+                        $("#requestCnt").text(requestCnt - 1);
+                        $("#request" + requestNo).remove();
+                        if (requestCnt <= 1) {// 요청이 더이상 없는 경우
+                            $("#accordion-body").append("<div class='card mt-2'><div class='card-body'><h4 class='card-title'>받은 요청이 없습니다</h4></div></div>");
+                        }
+                        // 채팅 수락을 하면 userNo들이 생성되니 이걸 websocket에 등록해주어야함
+                        let str = data;
+                        let crNo = str.slice(8); // ACCEPTED 자르고 뒤에 온 crNo 가져오기
+
+                        let acceptedMsg = {
+                            type: "chatRequestAccepted",
+                            crNo : String(crNo),
+                            mNo : String(mNo)
+                        }
+                        websocket.send(JSON.stringify(acceptedMsg));
+
+                        let msg = {
+                            type: "chatRoomCreated",
+                            crNo : String(crNo),
+                            mNo : String(mNo)
+                        }
+                        websocket.send(JSON.stringify(msg))
+
+                        responseRequest();
+
+                    } else if (data == "DECLINE") {
+                        alert(sender + "님의 요청을 거절하였습니다.");
+                        $("#requestCnt").text(requestCnt - 1);
+                        $("#request" + requestNo).remove();
+                        if (requestCnt <= 1) {// 요청이 더이상 없는 경우
+                            $("#accordion-body").append("<div class='card mt-2' id='noMoreRequest'><div class='card-body'><h4 class='card-title'>받은 요청이 없습니다</h4></div></div>");
+                        }
+                        responseRequest();
+
+
+                    } else if (data == "RESPONSE_ERR" || data == "REQUEST_NOT_FOUND" || data == "UNEXPECTED_ERR" || data == "DELETE_ERR") {
+                        console.log(data);
+                        alert("에러가 발생했습니다. 다시 시도해주세요.");
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에게 문의 바랍니다. travelPlannerOffical@gmail.com");
+                }
+            });
+        });
+
+
+    });
+
+</script>
+
+</html>

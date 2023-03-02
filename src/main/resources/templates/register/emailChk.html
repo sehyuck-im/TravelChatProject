@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Join Us! - Travel Planner</title>
+    <div th:replace="fragments/config :: configFragment"></div>
+
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Travel Chat</a>
+    </div>
+
+</nav>
+<div class="container">
+    <form id="frm" action="/register/registerForm" method="post">
+        <div class="row">
+            <div class="col-3"></div>
+            <div class="col-6">
+                <div class="mt-5">
+                    <label class="form-label" for="email">Email</label>
+                </div>
+                <div class="input-group mb-4">
+                    <input type="email" class="form-control" placeholder="example@email.com" id="email"
+                           aria-label="Recipient's username" aria-describedby="emailChkBtn" name="email"  th:value="${emailCode?.email}" >
+                    <button class="btn btn-outline-primary" type="button" id="emailChkBtn">인증번호 발송</button>
+
+                </div>
+                <div class="point successEmailChk"></div>
+
+                <div class="form-group mb-4 mt-2">
+                    <label class="form-label" for="emailCodeInput">인증번호</label>
+                    <input class="form-control" id="emailCodeInput" type="text" name="code" th:value="${emailCode?.code}">
+                    <div class="valid-feedback"></div>
+                    <div class="invalid-feedback"></div>
+                </div>
+
+
+
+                <div align="center" class="mt-3 mb-5">
+                    <button class="btn btn-primary" type="submit" disabled="disabled" id="submitBtn">인증 완료!</button>
+                </div>
+
+                <a href="register/forgotInfo" class="mt-3">비밀번호 찾기</a>
+
+            </div>
+        </div>
+        <div class="col-3"></div>
+    </form>
+
+</div>
+</form>
+
+
+</body>
+<script th:inline="javascript">
+    // redirect 시 출력할 msg, css
+    /*<![CDATA[*/
+    let msg = [[${msg}]];
+    /*]]>*/
+    if(msg=="CHK_ERR") {
+        alert("유효한 이메일주소가 아니거나 코드가 일치하지 않습니다.");
+        $(".invalid-feedback").html("<i class=\"fa-solid fa-circle-exclamation\"></i>유효한 이메일주소가 아니거나 코드가 일치하지 않습니다.");
+        $("#emailCodeInput").attr("class", "form-control is-invalid");
+    }
+    if(msg=="SER_ERR)") {
+        alert("예기치 못한 에러가 발생하였습니다. 다시 시도해 주세요. 반복적으로 발생시 관리자에게 문의 바랍니다. travelPlannerOffical@gmail.com");
+    }
+    if(msg=="DEL_ERR") {
+        alert("인증받은 이메일이 아닙니다. 인증을 다시 해주세요.");
+    }
+
+    // email check
+    var code = "";
+    $("#emailChkBtn").click(function () {
+        var email = $("#email").val();
+        $.ajax({
+            type: "GET",
+            url: "/register/emailChkBtn?email=" + email,
+            cache: false,
+            success: function (data) {
+                if (data == 'INVALID_EMAIL') {
+                    $("#email").attr("autofocus", true);
+                    $(".successEmailChk").html("<i class=\"fa-solid fa-circle-exclamation\"></i> 유효한 이메일 주소를 입력해주세요.");
+                    $(".successEmailChk").css("color", "red");
+
+                }else if (data == 'ERROR') {
+                    alert("에러가 발생했습니다 다시 시도해 주세요. 여러번 반복해서 생길 경우 관리자에 문의 부탁드립니다.");
+                    $("#email").attr("autofocus", true);
+                    $(".successEmailChk").html("<i class=\"fa-solid fa-xmark\"></i> 다시 시도해 주세요.<br> 여러번 반복해서 생길 경우 관리자에 문의 부탁드립니다.");
+                    $(".successEmailChk").css("color", "red");
+
+                }else if (data == 'DUP') {
+                    alert("이미 가입한 이메일 입니다.");
+                    $("#email").attr("autofocus", true);
+                    $(".successEmailChk").html("<i class=\"fa-solid fa-xmark\"></i> 이미 가입한 이메일 입니다.");
+                    $(".successEmailChk").css("color", "red");
+
+                }else {
+                    alert("인증번호 발송이 완료되었습니다.\n입력한 이메일에서 인증번호 확인을 해주십시오.");
+                    $("#emailCodeInput").attr("disabled", false);
+                    $(".successEmailChk").html("<i class=\"fa-solid fa-check\"></i>인증번호를 입력한 뒤 이메일 인증을 눌러주십시오.");
+                    $(".successEmailChk").css("color", "green");
+                    code = data;
+                    /*localStorage에 저장하여 새로고침해도 값 남기기*/
+                    localStorage.setItem("code", code);
+
+                }
+            }
+        });
+    });
+
+    // key up 방식으로 email code 유효성 검사 Test
+    $("#emailCodeInput")
+        .on("propertychange chagne keyup paste input",
+            function () {
+                var inputCode = $("#emailCodeInput").val();
+                /*localStorage에 저장된 code 가져오기*/
+                code = localStorage.getItem("code");
+                $.ajax({
+                    type: "GET", url: "/register/emailCodeCheck?inputCode=" + inputCode + "&code=" + code,
+                    cache: false,
+                    success: function (data) {
+                        if ('OK' == data) {
+                            $("#emailCodeInput").attr("class", "form-control is-valid");
+                            $(".valid-feedback").html("<i class=\"fa-sharp fa-solid fa-thumbs-up\"></i>인증번호가 일치합니다.");
+                            $(".invalid-feedback").attr("disabled", true);
+                            $("#submitBtn").attr("disabled", false);
+
+                        } else {
+                            $(".invalid-feedback").html("<i class=\"fa-solid fa-circle-exclamation\"></i>인증번호가 일치하지 않습니다. 확인해주시기 바랍니다.");
+                            $("#emailCodeInput").attr("class", "form-control is-invalid");
+                            $("#sm_email2").attr("autofocus", true);
+                            $(".valid-feedback").attr("disabled", true);
+                            $("#submitBtn").attr("disabled", true);
+
+                        }
+                    }
+                });
+            });
+
+</script>
+</html>

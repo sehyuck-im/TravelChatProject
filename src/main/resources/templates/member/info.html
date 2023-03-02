@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+    <link rel="stylesheet" type="text/css" href="/bootstrap/slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="/bootstrap/slick/slick-theme.css"/>
+    <script type="text/javascript" src="/bootstrap/slick/slick.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.slider').slick({
+                dots: true,
+                infinite: true,
+                speed: 500,
+                fade: true,
+                cssEase: 'linear',
+                adaptiveHeight: !0
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="container mb-5">
+
+        <div class="row mt-lg-4">
+            <div class="col-2"></div>
+            <div class="col-4 mt-2"><h2><span th:text="${targetMember.nick}" id="nick"></span>
+                <span th:text="${code}" id="code" class="text-muted"></span>'s Profile</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-2"></div>
+            <div class="col-4">
+                <th:block th:if="${isShaker == 'y'}">
+                    <button type="button" class="btn btn-outline-secondary rounded" id="goodByeBtn">
+                        <i class="fa-solid fa-handshake-angle"></i>
+                    </button>
+                </th:block>
+                <th:block th:if="${isShaker == 'n'}">
+                    <button type="button" class="btn btn-outline-secondary rounded" id="shakeBtn">
+                        <i class="fa-solid fa-hand-holding"></i>
+                    </button>
+                </th:block>
+                <button type="button" class="btn btn-outline-secondary rounded" id="directMessageBtn">
+                    <i class="far fa-paper-plane"></i>
+                </button>
+                <button type="button" class="btn btn-outline-danger rounded" id="reportUserBtn"
+                        th:data="${targetMember.mNo}">
+                    <i class="fa-solid fa-hand-fist"></i>
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-4"></div>
+            <div class="col-4">
+                <div class="card">
+                    <img class="d-block user-select-none" width="100%" height="100%"
+                         th:src="${#strings.equals(targetProfile.photo, 'none')}?'../images/noimage.png': @{'/image/profile/'+${targetProfile.mNo}+'/'+${targetProfile.photo}}"
+                         id="preview">
+                </div>
+            </div>
+
+        </div>
+        <th:block th:if="${targetProfile.openProfile == 'y' || isShaker == 'y'}">
+            <div id="genderDiv" align="center" class="mt-3">
+
+                <span class="form-text text-muted">성별</span>
+                <span class="badge rounded-pill bg-primary"
+                      th:text="${targetProfile.openGender == 'n'}?'shush!':${targetMember.gender}"></span>
+            </div>
+            <div class="row">
+                <div class="col-2"></div>
+                <div id="introDiv" name="intro" class="col-8 mt-4">
+                <textarea class="form-control"
+                          th:text="${targetProfile.intro == null || targetProfile.intro eq ''}?'자기소개가 없습니다':${targetProfile.intro}"
+                          readonly="readonly"
+                          id="intro" name="intro">
+                </textarea>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-3"></div>
+                <div class="col-6">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item active">Feed <span th:text="${feedCount}"
+                                                                      class="badge rounded-pill bg-primary ms-1 mx-1"
+                                                                      id="feedCount"></span></li>
+                    </ol>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-3"></div>
+                <div class="col-6">
+                    <div class="card mb-3" th:each="feed : ${targetFeedList}"
+                         th:if="${!#lists.isEmpty(targetFeedList)}" th:id="${feed.feedNo}">
+                        <h3 class="card-header">
+                            <a th:href="@{/member/info(mNo=${feed.writer})}" style="text-decoration: none">
+                                <img width="35" height="35" class="rounded-circle"
+                                     th:src="${#strings.equals(targetProfile.photo, 'none')}?'../images/noimage.png': @{'/image/profile/'+${targetProfile.mNo}+'/'+${targetProfile.photo}}">
+                                <span th:text="${targetMember.nick}"></span><span th:text="${targetMember.code}"
+                                                                                  class="text-muted"></span>
+                            </a>
+
+                            <div class="nav-item dropdown" style="float: right">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                                   aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa-sharp fa-solid fa-ellipsis-vertical"></i>
+                                </a>
+                                <div class="dropdown-menu" style="">
+                                    <button type="button" class="reportFeedBtn dropdown-item"
+                                            th:feedNo="${feed.feedNo}">
+                                        Report <i class="fa-sharp fa-solid fa-bell"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </h3>
+
+                        <div class="slider">
+                            <div th:if="${#lists.isEmpty(feed.getPhotoNames())}">
+                                <img width="100%" height="200"
+                                     th:src="@{'/image/feed/'+${feed.writer}+'/'+${feed.feedNo}+'/'+${feed.photo}}">
+                            </div>
+                            <div th:if="${!#lists.isEmpty(feed.getPhotoNames())}"
+                                 th:each="photo : ${feed.photoNames}">
+                                <img width="100%" height="200"
+                                     th:src="@{'/image/feed/'+${feed.writer}+'/'+${feed.feedNo}+'/'+${photo}}">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                        <pre class="content card-text" th:text="${feed.content}">
+                        </pre>
+                        </div>
+
+                        <div class="card-body" th:id="commentDiv+${feed.feedNo}">
+                            <th:block th:if="${feed.commentList.size() > 3}">
+                                    <span class="text-muted" th:id="'head'+${feed.feedNo}">
+                                        <span type="button" data-bs-toggle="collapse"
+                                              th:data-bs-target="'#body'+${feed.feedNo}"
+                                              aria-expanded="false" th:aria-controls="'body'+${feed.feedNo}">
+                                            댓글 <span th:text="${feed.commentList.size()}"></span>개 모두 보기
+                                        </span>
+                                    </span>
+                                <div th:id="'body'+${feed.feedNo}" class="accordion-collapse collapse"
+                                     th:data="${feed.commentList.size()}"
+                                     th:aria-labelledby="'head'+${feed.feedNo}" style="">
+                                    <th:block th:each="comment : ${feed.commentList}">
+                                        <div class="row mb-3"
+                                             th:feedNo="${feed.feedNo}">
+                                            <th:block th:if="${comment.level == 0}">
+                                                <div class="col-1"></div>
+                                                <div class="col-10" th:data="${comment.cno}"
+                                                     th:id="'comment'+${comment.cno}">
+                                                    <a th:href="@{/member/info(mNo=${comment.writer})}"
+                                                       style="text-decoration: none">
+                                                        <img width="25" height="25" class="rounded-circle"
+                                                             th:src="${#strings.equals(comment.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${comment.writer}+'/'+${comment.photo}}">
+                                                        <span th:text="${comment.nick}"></span><span
+                                                            th:text="${comment.code}"
+                                                            class="text-muted"></span>
+                                                    </a>
+                                                    <span class="reply text-muted" type="button">댓글</span>
+                                                    <th:block th:if="${#strings.equals(readerNo, comment.writer)}">
+                                                        |
+                                                        <span class="modRep text-muted" type="button">수정</span>
+                                                        |
+                                                        <span class="delRep text-muted" type="button">삭제</span>
+                                                    </th:block>
+                                                    <div class="ms-2">
+                                                        <span class="text-secondary" th:text="${comment.content}"
+                                                              th:id="'contentBox'+${comment.cno}">
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                            <th:block th:if="${comment.level > 0}">
+                                                <div class="col-2"></div>
+                                                <div class="col-8" th:data="${comment.cno}"
+                                                     th:id="'comment'+${comment.cno}">
+                                                    <a th:href="@{/member/info(mNo=${comment.writer})}"
+                                                       style="text-decoration: none">
+                                                        <img width="25" height="25" class="rounded-circle"
+                                                             th:src="${#strings.equals(comment.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${comment.writer}+'/'+${comment.photo}}">
+                                                        <span th:text="${comment.nick}"></span><span
+                                                            th:text="${comment.code}"
+                                                            class="text-muted"></span>
+                                                    </a>
+                                                    <th:block th:if="${#strings.equals(readerNo, comment.writer)}">
+                                                        <span class="modRep text-muted" type="button">수정</span>
+                                                        |
+                                                        <span class="delRep text-muted" type="button">삭제</span>
+                                                    </th:block>
+                                                    <div class="ms-2">
+                                                <span class="text-secondary" th:text="${comment.content}"
+                                                      th:id="'contentBox'+${comment.cno}">
+                                                </span>
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                    </th:block>
+                                </div>
+                            </th:block>
+                            <th:block th:if="${feed.commentList.size() <= 3}"
+                                      th:each="comment : ${feed.commentList}">
+                                <th:block th:if="${comment.level == 0}">
+                                    <div class="row mb-3" th:feedNo="${feed.feedNo}">
+                                        <div class="col-1"></div>
+                                        <div class="col-10" th:data="${comment.cno}" th:id="'comment'+${comment.cno}">
+                                            <a th:href="@{/member/info(mNo=${comment.writer})}"
+                                               style="text-decoration: none">
+                                                <img width="25" height="25" class="rounded-circle"
+                                                     th:src="${#strings.equals(comment.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${comment.writer}+'/'+${comment.photo}}">
+                                                <span th:text="${comment.nick}"></span><span th:text="${comment.code}"
+                                                                                             class="text-muted"></span>
+                                            </a>
+                                            <span class="reply text-muted" type="button">댓글</span>
+                                            <th:block th:if="${#strings.equals(readerNo, comment.writer)}">
+                                                |
+                                                <span class="modRep text-muted" type="button">수정</span>
+                                                |
+                                                <span class="delRep text-muted" type="button">삭제</span>
+                                            </th:block>
+
+
+                                            <div class="ms-2">
+                                    <span class="text-secondary" th:text="${comment.content}"
+                                          th:id="'contentBox'+${comment.cno}">
+                                    </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th:block>
+                                <th:block th:if="${comment.level > 0}">
+                                    <div class="row mb-3" th:feedNo="${feed.feedNo}">
+                                        <div class="col-2"></div>
+                                        <div class="col-8" th:data="${comment.cno}" th:id="'comment'+${comment.cno}">
+                                            <a th:href="@{/member/info(mNo=${comment.writer})}"
+                                               style="text-decoration: none">
+                                                <img width="25" height="25" class="rounded-circle"
+                                                     th:src="${#strings.equals(comment.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${comment.writer}+'/'+${comment.photo}}">
+                                                <span th:text="${comment.nick}"></span><span th:text="${comment.code}"
+                                                                                             class="text-muted"></span>
+                                            </a>
+
+                                            <th:block th:if="${#strings.equals(readerNo, comment.writer)}">
+
+                                                <span class="modRep text-muted" type="button">수정</span>
+                                                |
+                                                <span class="delRep text-muted" type="button">삭제</span>
+                                            </th:block>
+                                            <div>
+                                    <span class="text-secondary" th:text="${comment.content}"
+                                          th:id="'contentBox'+${comment.cno}">
+                                    </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th:block>
+                            </th:block>
+                            <th:block th:if="${#lists.isEmpty(feed.commentList)}">
+                                <span class="text-muted">작성된 댓글이 없습니다.</span>
+                            </th:block>
+                        </div>
+
+                        <div class="form-group mb-2 mt-2 mx-2 ms-2">
+                            <div class="input-group">
+                                <input type="text" class="commentBox form-control" placeholder="댓글을 남기시겠어요?"
+                                       aria-describedby="sendBtn" th:id="commentInput+${feed.feedNo}">
+                                <button class="commentBtn btn btn-primary" type="button" th:data="${feed.feedNo}">
+                                    <i class="fa-solid fa-pencil"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card-footer text-muted" th:text="${feed.stringDate}">
+
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(targetFeedList)}">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item active">작성한 피드가 없습니다.</li>
+                        </ol>
+                    </div>
+                    <div id="appendDiv"></div>
+                </div>
+            </div>
+        </th:block>
+        <div th:if="${targetProfile.openProfile == 'f' && isShaker == 'n'}" class="row mt-5">
+            <div class="col-4"></div>
+            <div class="col-6"><h2>
+                친구에게만 공개된 계정입니다.
+            </h2>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="feedModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Feed 신고하기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <label for="feedModalSelect" class="form-label mt-4">신고 사유</label>
+                    <select class="form-select" id="feedModalSelect">
+                        <option value="1">1. 부적절한 사진</option>
+                        <option value="2">2. 부적절한 내용 혹은 욕설</option>
+                        <option value="3">3. 기타</option>
+                    </select>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="feedModalSubmitBtn">Report!</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="infoModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">회원 신고하기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label for="infoModalSelect" class="form-label mt-4">신고 사유</label>
+                    <select class="form-select" id="infoModalSelect">
+                        <option value="1">1. 부적절한 프로필 사진</option>
+                        <option value="2">2. 부적절한 내용 혹은 욕설</option>
+                        <option value="3">3. 기타</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="infoModalSubmitBtn">Report!</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="fragments/footer :: footerFragment"></div>
+</body>
+<script th:inline="javascript">
+    // intro 사이즈에 맞춰 textarea 사이즈 조절
+    document.addEventListener('DOMContentLoaded', function () {
+        autosize(document.querySelectorAll('#intro'));
+    }, false);
+
+    /*<![CDATA[*/
+
+    let msg = [[${msg}]];
+    let targetMno = [[${targetProfile.mNo}]]
+    /*]]>*/
+
+    $(document).ready(function () {
+
+        const mNo = [[${#session.getAttribute('mNo')}]];
+        // const websocket = new WebSocket("ws://3.39.44.182:8080/ws/chat");
+        const websocket = new WebSocket("wss://travelchatportfolio.click/ws/chat");
+        function sendChatRequest() {
+            let msg = {
+                type: "sendChatRequest",
+                sender: String(mNo),
+                receiver: String(targetMno)
+            };
+
+            websocket.send(JSON.stringify(msg));
+
+        }
+
+        $(document).on("click", ".reportFeedBtn", function () {
+            let feedNo = $(this).attr("feedNo")
+            $('#feedModal').modal('show');
+            $("#feedModalSubmitBtn").attr("feedNo", feedNo);
+
+        });
+        $(document).on("click", "#feedModalSubmitBtn", function () {
+            let feedNo = $(this).attr("feedNo");
+            let selectedValue = $("#feedModalSelect option:selected").val();
+            let type = 1;
+            reportAjax(feedNo, selectedValue, type);
+            $('#feedModal').modal('hide');
+        });
+
+        function reportAjax(evidence, selectedValue, type) {
+            $.ajax({
+                url: "/report",
+                type: "POST",
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                data: JSON.stringify({type: type, evidence: evidence, reason: selectedValue}),
+                success: function (data) {
+                    if (data == "SUCCESS") {
+                        alert("신고가 완료되었습니다.")
+                    } else if (data == "ALREADYDONE") {
+                        alert("신고가 접수되어 검토 중입니다.")
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                }
+            });
+        }
+
+        $("#reportUserBtn").on("click", function () {
+            $('#infoModal').modal('show');
+        });
+        $("#infoModalSubmitBtn").on("click", function () {
+            let evidence = targetMno;
+            let selectedValue = $("#infoModalSelect option:selected").val();
+            let type = 2;
+            reportAjax(evidence, selectedValue, type);
+            $('#infoModal').modal('hide');
+
+        });
+        $("#directMessageBtn").on("click", function () { // direct message 버튼
+            // 1. 대화방 연결 요청
+            let receiver = targetMno;
+
+            $.ajax({
+                url: "/chat/request?receiver=" + receiver,
+                type: "GET",
+                success: function (data) {
+                    if (data.includes("SUCCESS")) {
+                        alert("요청 성공, 상대방이 수락하면 대화가 시작됩니다.");
+                        // let requestNo = data.slice(7);
+                        sendChatRequest();
+
+                    } else if (data == "REQUEST_ERR") {
+                        alert("에러가 발생했습니다. 다시 시도해주세요.");
+                    } else if (data == "WAIT_RESPONSE") {
+                        alert("상대방의 수락을 대기 중입니다.")
+                    } else if (data.includes("crNo=")) {
+                        let str = data.split("=");
+                        let crNo = str[1];
+
+                        location.href = "/chat/chatRoom?crNo=" + crNo;
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                }
+            });
+        });
+        $("#shakeBtn").on("click", function () { // shake(친구추가) 버튼
+            // 1. 친구 요청
+            let receiver = targetMno;
+            $.ajax({
+                url: "/member/requestShake?receiver=" + receiver,
+                type: "GET",
+                success: function (data) {
+                    if (data == "SUCCESS_SHAKEREQ") {
+                        alert("요청 성공, 상대방이 수락을 대기 중입니다.");
+                        let shakeRequest = {
+                            type: "shakeRequest",
+                            sender: String(mNo),
+                            receiver: String(receiver)
+                        }
+                        websocket.send(JSON.stringify(shakeRequest));
+                        let sendShakeRequest = {
+                            type: "SendShakeRequest",
+                            sender: String(mNo),
+                            receiver: String(receiver)
+                        }
+                        websocket.send(JSON.stringify(sendShakeRequest));
+
+                    } else if (data == "WAIT_RESPONSE") {
+                        alert("상대방의 수락을 대기 중입니다.");
+                        location.reload();
+                    } else if (data == "CHK_REQUEST") {
+                        alert("상대방이 요청을 기다리는 중입니다. 요청함을 확인 해주세요.");
+                        location.reload();
+                    } else if (data == "INSERT_ERR" || data == "CREAT_ERR") {
+
+                        alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                }
+            });
+
+        });
+
+
+        $("#goodByeBtn").on("click", function () { // goodBye(친구삭제) 버튼
+
+            let target = targetMno;
+            let nick = $("#nick").text();
+            let code = $("#code").text();
+            if (confirm(nick + code + "과 작별 하시겠습니까?")) {
+                $.ajax({
+                    url: "/member/goodBye?target=" + target,
+                    type: "GET",
+                    success: function (data) {
+                        if (data == "SUCCESS") {
+                            alert("친구 삭제 성공");
+                            location.reload();
+                        } else if (data == "UNEXPECTED_ERR" || data == "DEL_ERR") {
+                            console.log(data);
+                            alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                        } else if (data == "NOTSHAKER" || data == "NOSHAKER") {
+                            alert("잘못된 요청입니다. 확인하시고 다시 시도해주세요");
+                            location.reload();
+                        }
+                    },
+                    error: function () {
+                        alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                        location.reload();
+                    }
+                });
+            }
+
+        });
+        let idx = 1;
+
+        function appendDivs(result, idx) {
+
+            $("#appendDiv").append("<div id='append" + idx + "'></div>");
+            $("#append" + idx).append(result);
+            setTimeout(function () {
+                appendSliderSlick();
+            }, 500);
+        }
+
+        function appendSliderSlick() {
+            let appendSlider = $("#append" + idx).children().children(".slider");
+            appendSlider.slick({
+                dots: true,
+                infinite: true,
+                speed: 500,
+                fade: true,
+                cssEase: 'linear',
+                adaptiveHeight: !0
+            });
+            idx++;
+
+        }
+
+        $(window).scroll(function () {
+            let scrT = $(window).scrollTop();
+            if (scrT == $(document).height() - $(window).height()) { // 스크롤이 footer 위에 닿으면
+                let lastNo = $(".card:last").attr("id");
+
+                if (!isNaN(lastNo)) {
+                    $.ajax({
+                        type: 'GET',       // 요청 메서드
+                        url: '/feed/append?feedNo=' + lastNo + '&type=info',  // 요청 URI
+                        success: function (result) {
+                            if (result != "noMoreFeed") {
+
+
+                                appendDivs(result, idx);
+                            }
+                        },
+                        error: function () {
+                            alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                            $(window).scrollTop(0);
+                            location.reload();
+                        } // 에러가 발생했을 때, 호출될 함수
+                    });
+                }
+            }
+
+        });
+        $(document).on("click", ".commentBtn", function () {
+            let feedNo = $(this).attr("data");
+            let content = $("#commentInput" + feedNo).val();
+            commentInsertAjax(feedNo, content);
+        });
+
+        $(document).on("click", ".modRep", function () {
+            let cno = $(this).parent().attr("data");
+            let originalContent = $("#contentBox" + cno).text();
+            $("#content" + cno).children().css("display", "none");
+            let modForm = "<div class=\"input-group\" id='modForm" + cno + "'><input type=\"text\" class=\"commentBox form-control\"";
+            modForm += "aria-describedby=\"modCompleteBtn, modCancelBtn\" id='modInput" + cno + "' value=" + originalContent + ">";
+            modForm += "<button class=\"modCompleteBtn btn btn-secondary\" type=\"button\" data=" + cno + ">수정</button>";
+            modForm += "<button class=\"modCancelBtn btn btn-warning\" type=\"button\" data=" + cno + ">취소</button></div>"
+            $("#comment" + cno).html(modForm);
+            $("#modInput" + cno).focus();
+        });
+
+        $(document).on("click", ".modCompleteBtn", function () {
+
+            let cno = $(this).attr("data");
+            let content = $("#modInput" + cno).val();
+            let feedNo = $(this).parent().parent().parent().attr("feedNo");
+            commentUpdateAjax(cno, content, feedNo);
+        });
+        $(document).on("click", ".modCancelBtn", function () {
+            let feedNo = $(this).parent().parent().parent().attr("feedNo");
+            commentRefresh(feedNo);
+        });
+        $(document).on("click", ".delRep", function () {
+            if (confirm("댓글을 삭제하시겠습니까?")) {
+                let cno = $(this).parent().attr("data");
+                let feedNo = $(this).parent().parent().attr("feedNo");
+
+                $.ajax({
+                    type: 'DELETE',       // 요청 메서드
+                    url: '/comments/' + cno,  // 요청 URI
+                    success: function () {
+                        alert("댓글 삭제 성공");
+                        commentRefresh(feedNo);
+                    },
+                    error: function () {
+
+                        alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                        location.reload();
+                    } // 에러가 발생했을 때, 호출될 함수
+                });
+            }
+
+        });
+        $(document).on("click", ".reply", function () {
+            let pcno = $(this).parent().attr("data");
+            let feedNo = $(this).parent().parent().attr("feedNo");
+            $("#comment" + pcno).children(".input-group").remove();
+            let replyForm = "<div class='input-group'><input type='text' class='commentBox form-control' placeholder='답글을 남기시겠어요?'";
+            replyForm += "aria-describedby='sendBtn' id='replyInput" + pcno + "'>";
+            replyForm += "<button class='replyBtn btn btn-primary' type='button' data=" + feedNo + " pcno=" + pcno + ">";
+            replyForm += "<i class=\"fa-solid fa-pencil\"></i></button></div>";
+
+            $("#comment" + pcno).append(replyForm);
+
+        });
+        $(document).on("click", ".replyBtn", function () {
+            let pcno = $(this).attr("pcno");
+            let feedNo = $(this).attr("data");
+            let content = $("#replyInput" + pcno).val();
+
+            if (content.trim() == '') {
+                alert("내용을 입력해주세요.");
+                $("#replyInput" + pcno).focus();
+                return;
+            }
+            if (content.length > 100) {
+                alert("100자 이하로 작성해주세요.");
+                $("#replyInput" + pcno).focus();
+                return;
+            }
+            $.ajax({
+                type: 'POST',       // 요청 메서드
+                url: '/comments?feedNo=' + feedNo,  // 요청 URI
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                data: JSON.stringify({content: content, pcno: pcno}),
+                success: function (result) {
+                    if (result == "COMMENT_INSERT_OK") {
+                        alert("댓글 입력 성공");
+
+                        commentRefresh(feedNo);
+                    } else if (result == "COMMENT_INSERT_ERR") {
+                        alert("댓글 입력 실패, 다시 시도해주세요.");
+                        location.reload();
+                    }
+
+                },
+                error: function () {
+                    alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                    location.reload();
+                } // 에러가 발생했을 때, 호출될 함수
+
+            });
+
+        });
+
+
+        let toHtml = function (commentList, feedNo) {
+            let commentsCount = commentList.length;
+            let temp = "";
+            if (commentsCount > 3) {
+                temp += "<span class='text-muted' id='head" + feedNo + "'>";
+                temp += "<span type='button' data-bs-toggle='collapse' data-bs-target='#body" + feedNo + "' aria-expanded='false'aria-controls='body" + feedNo + "'> ";
+                temp += "댓글 " + commentsCount + "개 모두 보기</span></span>";
+                temp += "<div id='body" + feedNo + "' class='accordion-collapse collapse show'";
+                temp += "data='" + commentsCount + "'";
+                temp += "aria-labelledby='head" + feedNo + "' style=''>";
+                commentList.forEach(function (comment) {
+                    if (comment.level == 0) {
+                        temp += "<div class='row mb-3' feedNo=" + feedNo + ">";
+                        temp += "<div class='col-1'></div><div class='col-10' data=" + comment.cno + " id='comment" + comment.cno + "'>";
+                        temp += "<a href='/member/info?mNo=" + comment.writer + "' style='text-decoration: none'>";
+                        temp += "<img width='25' height='25' class='rounded-circle'";
+                        if (comment.photo == 'none') {
+                            temp += "src='../images/noPhoto.png'>";
+                        } else {
+                            temp += "src='/image/profile/" + comment.writer + "/" + comment.photo + "'>";
+
+                        }
+                        temp += "<span>" + comment.nick + "</span>";
+                        temp += "<span class='text-muted'>" + comment.code + "</span></a>";
+                        temp += "<span class='reply text-muted ms-1' type='button'>댓글</span>";
+                        if (mNo === comment.writer) {
+                            temp += " | ";
+                            temp += "<span class='modRep text-muted' type='button'>수정</span>";
+                            temp += " | ";
+                            temp += "<span class='delRep text-muted' type='button'>삭제</span>";
+                        }
+
+                    } else {
+                        temp += "<div class='row mb-3' feedNo=" + feedNo + ">";
+                        temp += "<div class='col-2'></div><div class='col-8' data=" + comment.cno + " id='comment" + comment.cno + "'>";
+                        temp += "<a href='/member/info?mNo=" + comment.writer + "' style='text-decoration: none'>";
+                        temp += "<img width='25' height='25' class='rounded-circle'";
+                        if (comment.photo == 'none') {
+                            temp += "src='../images/noPhoto.png'>";
+                        } else {
+                            temp += "src='/image/profile/" + comment.writer + "/" + comment.photo + "'>";
+
+                        }
+                        temp += "<span>" + comment.nick + "</span>";
+                        temp += "<span class='text-muted'>" + comment.code + "</span></a>";
+                        if (mNo === comment.writer) {
+                            temp += "<span class='modRep text-muted' type='button'>수정</span>";
+                            temp += " | ";
+                            temp += "<span class='delRep text-muted' type='button'>삭제</span>";
+                        }
+                    }
+                    temp += "<div class='ms-2'>";
+                    temp += "<span class='text-secondary' id='contentBox" + comment.cno + "'>" + comment.content + "</span>";
+                    temp += "</div></div></div>";
+                });
+                temp += "</div></div>";
+            } else if (commentsCount <= 3) {
+                commentList.forEach(function (comment) {
+                    if (comment.level == 0) {
+                        temp += "<div class='row mb-3'feedNo=" + feedNo + ">";
+                        temp += "<div class='col-1'></div><div class='col-10' data=" + comment.cno + " id='comment" + comment.cno + "'>";
+                        temp += "<a href='/member/info?mNo=" + comment.writer + "' style='text-decoration: none'>";
+                        temp += "<img width='25' height='25' class='rounded-circle'";
+                        if (comment.photo == 'none') {
+                            temp += "src='../images/noPhoto.png'>";
+                        } else {
+                            temp += "src='/image/profile/" + comment.writer + "/" + comment.photo + "'>";
+
+                        }
+                        temp += "<span>" + comment.nick + "</span>";
+                        temp += "<span class='text-muted'>" + comment.code + "</span></a>";
+                        temp += "<span class='reply text-muted ms-1' type='button'>댓글</span>";
+                        if (mNo === comment.writer) {
+                            temp += " | ";
+                            temp += "<span class='modRep text-muted' type='button'>수정</span>";
+                            temp += " | ";
+                            temp += "<span class='delRep text-muted' type='button'>삭제</span>";
+
+                        }
+                    } else {
+                        temp += "<div class='row mb-3'feedNo=" + feedNo + ">";
+                        temp += "<div class='col-2'></div><div class='col-8' data=" + comment.cno + " id='comment" + comment.cno + "'>";
+                        temp += "<a href='/member/info?mNo=" + comment.writer + "' style='text-decoration: none'>";
+                        temp += "<img width='25' height='25' class='rounded-circle'";
+                        if (comment.photo == 'none') {
+                            temp += "src='../images/noPhoto.png'>";
+                        } else {
+                            temp += "src='/image/profile/" + comment.writer + "/" + comment.photo + "'>";
+
+                        }
+                        temp += "<span>" + comment.nick + "</span>";
+                        temp += "<span class='text-muted'>" + comment.code + "</span></a>";
+
+                        if (mNo === comment.writer) {
+
+                            temp += "<span class='modRep text-muted' type='button'>수정</span>";
+                            temp += " | ";
+                            temp += "<span class='delRep text-muted' type='button'>삭제</span>";
+
+                        }
+                    }
+
+                    temp += "<div class='ms-2'>";
+                    temp += "<span class='text-secondary' id='contentBox" + comment.cno + "'>" + comment.content + "</span>";
+                    temp += "</div></div></div>";
+
+                });
+                temp += "</div></div>";
+            } else if (commentsCount == 0) {
+                temp += "<span class=\"text-muted\">작성된 댓글이 없습니다.</span>";
+            }
+            return temp;
+
+        }
+
+        function commentRefresh(feedNo) { // 특정 피드의 댓글 가져오기
+            $.ajax({
+                type: 'GET',       // 요청 메서드
+                url: '/comments?feedNo=' + feedNo,  // 요청 URI
+                success: function (result) {
+                    $("#commentDiv" + feedNo).children().remove();
+                    $("#commentDiv" + feedNo).html(toHtml(result, feedNo));
+                },
+                error: function () {
+                    alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                    location.reload();
+                } // 에러가 발생했을 때, 호출될 함수
+            });
+        }
+
+        function commentInsertAjax(feedNo, content) {
+            if (content.trim() == '') {
+                alert("댓글을 입력해주세요.");
+                $("#commentInput" + feedNo).focus();
+                return;
+            }
+            if (content.length > 100) {
+                alert("100자 이하로 작성해주세요.");
+                $("#commentInput" + feedNo).focus();
+                return;
+            }
+            $.ajax({
+                type: 'POST',       // 요청 메서드
+                url: '/comments?feedNo=' + feedNo,  // 요청 URI
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                data: JSON.stringify({content: content, pcno: 0}),
+                success: function (result) {
+                    if (result == "COMMENT_INSERT_OK") {
+                        alert("댓글 입력 성공");
+                        $("#commentInput" + feedNo).val("");
+                        commentRefresh(feedNo);
+                    } else if (result == "COMMENT_INSERT_ERR") {
+                        alert("댓글 입력 실패, 다시 시도해주세요.");
+                        location.reload();
+                    }
+
+                },
+                error: function () {
+                    alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                    location.reload();
+                } // 에러가 발생했을 때, 호출될 함수
+
+            });
+        }
+
+        function commentUpdateAjax(cno, content, feedNo) {
+            if (content.trim() == '') {
+                alert("댓글을 입력해주세요.");
+                $("#modInput" + cno).focus();
+                return;
+            }
+            if (content.length > 100) {
+                alert("100자 이하로 작성해주세요.");
+                $("#modInput" + cno).focus();
+                return;
+            }
+
+            $.ajax({
+                type: 'PATCH',       // 요청 메서드
+                url: '/comments/' + cno,  // 요청 URI
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                data: JSON.stringify({content: content}),
+                success: function (result) {
+                    if (result == "MOD_OK") {
+                        alert("댓글 수정 성공");
+
+                        commentRefresh(feedNo);
+                    } else if (result == "MOD_ERR") {
+                        alert("댓글 수정 실패, 다시 시도해주세요.");
+                        location.reload();
+                    }
+
+                },
+                error: function () {
+                    alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                    location.reload();
+                }
+
+            });
+        }
+
+        $(".commentBox").keydown(function (key) {
+            // 엔터키 눌러서 메세지 전송
+            if (key.keyCode == 13) {
+                let feedNo = $(this).attr("id").slice(12);
+                let content = $("#commentInput" + feedNo).val();
+                commentInsertAjax(feedNo, content);
+            }
+        });
+    });
+
+</script>
+
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="container mb-5">
+        <div class="row mt-4">
+            <div class="col-6"></div>
+            <div class="col-5">
+                <div th:if="${mNo == board.writer}" th:data="${board.bNo}">
+                    <button type="button" class="btn btn-outline-success" id="pullBtn">Pull Up
+                        <i class="fa-solid fa-circle-arrow-up"></i></button>
+                    <button class="btn btn-outline-info" id="modBtn">Modify
+                        <i class="fa-solid fa-file-pen"></i></button>
+                    <button class="btn btn-outline-danger" id="delBtn">Delete
+                        <i class="fa-regular fa-trash-can"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+
+            <div class="col-3"></div>
+            <div class="col-6">
+                <div class="card mb-3" id="originalDiv">
+                    <h3 class="card-header" th:text="${board.title}" id="originalTitle"></h3>
+                    <div class="card-body">
+                        <a th:href="@{/member/info(mNo=${board.writer})}" style="text-decoration: none">
+                        <img width="50" height="50" class="rounded-circle"
+                             th:src="${#strings.equals(board.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${board.writer}+'/'+${board.photo}}">
+                        <span th:text="${board.nick}"></span><span th:text="${board.code}" class="text-muted"></span>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <pre th:text="${board.content}" class="content card-text mt-2" id="originalContent">
+
+                        </pre>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button class="btn btn-primary btn-lg" id="requestBtn" th:data="${board.crNo}">Let's High Five <i class="fa-solid fa-hand"></i></button>
+                    </div>
+                </div>
+                <form name="modForm" id="modForm" style="display: none">
+                    <div class="form-group">
+                        <label for="title" class="form-label mt-4">Title</label>
+                        <input type="text" class="form-control" id="title" aria-describedby="titleHelp"
+                               placeholder="Enter Title" name="title" th:value="${board == null}?'':${board.title}">
+                        <small id="titleHelp" class="form-text text-muted">
+                            채팅방의 초기 이름 입니다, 방장 권한으로 변경 가능합니다.
+                        </small>
+                    </div>
+                    <div class="mt-2 mb-1">
+                        <small class="form-text text-muted">300자이내로 작성해주세요.
+                            <span id="textCount" class="form-text text-muted"></span>
+                        </small>
+
+                        <textarea class="form-control" id="content" name="content" th:text="${board == null}?'':${board.content}"></textarea>
+                    </div>
+                    <div align="center">
+                        <button type="button" id="modFormBtn" class="btn btn-success mt-2" th:data="${board.bNo}">수정 완료</button>
+                        <button type="button" id="cancelBtn" class="btn btn-warning mt-2">취소</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div th:replace="fragments/footer :: footerFragment" class="mt-3"></div>
+</body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let mNo = [[${mNo}]];
+    let msg = [[${msg}]];
+    /*]]>*/
+    if(msg == "PULL_ERR"){
+        alert("에러가 발생하였습니다. 다시 시도해주세요");
+        location.reload();
+    }
+    if(msg == "MOD_ERR"){
+        alert("수정 실패, 다시 시도해 주세요.");
+        location.reload();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        autosize(document.querySelectorAll('#content'));
+    }, false);
+
+    $(document).ready(function () {
+        let content = $('#content').val();
+        // 글자수 세기
+        if (content.length == 0 || content == '') {
+            $('#textCount').text('0자');
+        } else {
+            $('#textCount').text(content.length + '자');
+        }
+        $('#content').keyup(function () {
+            let content = $(this).val();
+            // 글자수 세기
+            if (content.length == 0 || content == '') {
+                $('#textCount').text('0자');
+            } else {
+                $('#textCount').text(content.length + '자');
+            }
+
+            // 글자수 제한
+            if (content.length > 300) {
+                // 300자 부터는 타이핑 되지 않도록
+                $(this).val($(this).val().substring(0, 300));
+                // 300자 넘으면 알림창 뜨도록
+                alert('300자까지 입력 가능합니다.');
+            }
+
+        });
+    });
+    $(function (){
+        const mNo = [[${#session.getAttribute('mNo')}]];
+        const websocket = new WebSocket("wss://travelchatportfolio.click/ws/chat");
+
+        function chk() {
+            let content = $('#content').val();
+            let blank_pattern = /^\s+|\s+$/g;
+            let title = $('#title').val();
+            if (content.length == 0 || content == '' || content.replace(blank_pattern, '') == "") {
+                alert("내용을 입력해주세요");
+                return false;
+            }
+            if (title.length == 0 || title == '' || title.replace(blank_pattern, '') == "") {
+                alert("제목을 입력해주세요");
+                return false;
+            }
+        }
+        $("#modBtn").on("click", function (){
+            $("#originalDiv").css("display", "none");
+            $("#modForm").css("display", "");
+
+        });
+        $("#cancelBtn").on("click", function (){
+           location.reload();
+        });
+        $("#modFormBtn").on("click", function (){
+            let bNo = $(this).attr("data");
+            let type = 'form';
+            modifyAjax(bNo, type);
+        });
+        $("#pullBtn").on("click", function () {
+            let bNo = $(this).parent().attr("data");
+            let type = 'pullingUp';
+            modifyAjax(bNo, type);
+        });
+        $("#delBtn").on("click", function () {
+           if(confirm("모집글을 삭제하시겠습니까? 삭제 후 더이상 채팅방에 새로운 인원을 초대할 수 없습니다.")){
+               let bNo = $(this).parent().attr("data");
+               $.ajax({
+                   type: 'DELETE',       // 요청 메서드
+                   url: '/board/' + bNo,  // 요청 URI
+                   success: function (result) {
+                       if(result == "SUCCESS"){
+                           alert("삭제 성공");
+                           history.back();
+                       }else{
+                           alert("에러가 발생하였습니다. 다시 시도해 주세요");
+                           location.reload();
+                       }
+                   },
+                   error: function () {
+                       alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                       location.reload();
+                   } // 에러가 발생했을 때, 호출될 함수
+               });
+           }
+        });
+
+        function modifyAjax(bNo, type){
+            let title = $("#title").val();
+            let content = $("#content").val();
+            $.ajax({
+                type: 'PATCH',       // 요청 메서드
+                url: '/board/' + bNo+'?type='+type,  // 요청 URI
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                data: JSON.stringify({title: title, content: content}),
+                success: function (result) {
+
+                    if(result == "SUCCESS"){
+                        alert("수정 성공");
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                    location.reload();
+                } // 에러가 발생했을 때, 호출될 함수
+            });
+        };
+        $("#requestBtn").on("click", function () {
+            let crNo = $(this).attr("data");
+            console.log("crNo = "+crNo)
+            $.ajax({
+                type: 'GET',       // 요청 메서드
+                url: '/chat/highFiveRequest?crNo='+ crNo,  // 요청 URI
+                headers: {"content-type": "application/json"}, // 요청 헤더
+                success: function (result) {
+
+                    if(result == "REQ_OK"){
+
+                        alert("요청 성공, 요청이 수락되면 채팅방으로 초대됩니다.");
+                        // websocket으로 요청 보내기
+                        sendHighFiveRequest();
+
+                    }else if(result == "REQ_FAIL"){
+                        alert("요청 실패, 다시 시도하여주세요");
+                        location.reload();
+                    }else if(result == "CHECK"){
+                        alert("수락 대기 중이거나 이미 참여중인 채팅방입니다.");
+                    }
+                },
+                error: function () {
+                    alert("예기치 못한 에러가 발생하였습니다. 다시 시도해주세요");
+                    location.reload();
+                } // 에러가 발생했을 때, 호출될 함수
+            });
+        });
+        function sendHighFiveRequest() {
+            let msg = {
+                type: "sendHighFiveRequest",
+                sender: String(mNo),
+                crNo : String($("#requestBtn").attr("data"))
+            };
+
+            websocket.send(JSON.stringify(msg));
+        }
+    })
+
+
+</script>
+</html>

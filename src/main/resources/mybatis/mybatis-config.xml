@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <mappers>
+        <mapper resource="member.xml"/>
+        <mapper resource="chat.xml"/>
+        <mapper resource="chatUser.xml"/>
+        <mapper resource="chatHistory.xml"/>
+        <mapper resource="chatRoom.xml"/>
+        <mapper resource="board.xml"/>
+        <mapper resource="shaker.xml"/>
+        <mapper resource="feed.xml"/>
+        <mapper resource="comment.xml"/>
+        <mapper resource="report.xml"/>
+        <mapper resource="admin.xml"/>
+    </mappers>
+</configuration>

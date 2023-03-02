@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.member.repository.MemberRepository">
+
+    <select id="selectEmailCode" parameterType="String" resultType="EmailCode">
+        select ifnull(email, 'none') as email, ifnull(code, 'none') as code
+        from emailCode
+        where email = #{email}
+    </select>
+    <select id="selectId" parameterType="String" resultType="integer">
+        select ifnull(count(*), 0)
+        from member
+        where email = #{email}
+    </select>
+    <select id="selectById" parameterType="String" resultType="Member">
+        select *
+        from member
+        where email = #{email}
+    </select>
+    <insert id="upsertEmailCode" parameterType="EmailCode">
+        insert into emailCode(email, code) values (#{email}, #{code})
+        on duplicate key update email = values(email), code = values(code)
+
+    </insert>
+    <select id="selectNickCode" parameterType="String" resultType="integer">
+        select ifnull(count(*), 0)
+        from member
+        where nick = #{nick}
+    </select>
+    <insert id="insertMember" parameterType="Member" keyProperty="mNo" useGeneratedKeys="true">
+        insert into member (email, nick, password, gender, status, regDate)
+        values (#{email}, #{nick}, #{password}, #{gender},'n', now())
+    </insert>
+    <delete id="deleteEmailCode" parameterType="String">
+        delete from emailCode
+            where email = #{email}
+    </delete>
+    <select id="countProfileByMno" parameterType="integer" resultType="integer">
+        select ifnull(count(*), 0)
+        from profile
+        where mno = #{mNo}
+    </select>
+
+    <insert id="insertProfile" parameterType="integer">
+        insert into profile (mNo,openGender, openProfile)
+        value (#{mNo}, 'y', 'y')
+    </insert>
+
+    <select id="selectProfileByMno" parameterType="integer" resultType="Profile">
+        select mNo, ifnull(photo, 'none') as photo, intro, openGender, openProfile
+        from profile
+        where mNo = #{mNo}
+    </select>
+
+    <select id="selectByMno" parameterType="integer" resultType="Member">
+        select *
+        from member
+        where mNo = #{mNo}
+    </select>
+
+    <update id="updatePhoto" parameterType="Profile">
+        update Profile set photo = #{photo}
+        where mNo = #{mNo}
+    </update>
+    <update id="updateNick" parameterType="Member">
+        update member set nick = #{nick}
+        where mNo = #{mNo}
+    </update>
+
+    <update id="updateProfileWithoutPhoto" parameterType="Profile">
+        update profile set openProfile = #{openProfile}, openGender = #{openGender}, intro = #{intro}
+        where mNo = #{mNo}
+    </update>
+
+    <update id="updatePassword" parameterType="Member">
+        update member set password = #{password}
+        where mNo = #{mNo}
+    </update>
+
+    <insert id="insertMemberHistory" parameterType="Member">
+        insert into MemberHistory (mNo,email, nick, gender, status, reportCnt, regDate, leaveDate)
+            value (#{mNo}, #{email}, #{nick}, #{gender}, #{status}, #{reportCnt}, #{regDate}, now())
+    </insert>
+
+    <delete id="deleteMember" parameterType="Member">
+        delete from Member
+        where mNo = #{mNo}
+    </delete>
+    <delete id="deleteProfile" parameterType="integer">
+        delete from Profile
+        where mNo = #{mNo}
+    </delete>
+    <select id="selectPhotoByMno" parameterType="integer" resultType="String">
+        select ifnull(photo, 'none') as photo
+        from Profile
+        where mNo = #{mNo}
+    </select>
+    <select id="countMemberByMNo" parameterType="integer" resultType="integer">
+        select count(*) from member where mNo = #{mNo}
+    </select>
+
+    <!--test query-->
+    <insert id="insert" parameterType="Member">
+        insert into member (id, nick, password, gender, email, status, )
+        values (#{id}, #{nick}, #{password}, #{gender}, #{email}, 'n')
+    </insert>
+    <select id="select" parameterType="Member" resultType="Member">
+        select *
+        from member
+        where id = #{id}
+    </select>
+    <update id="update" parameterType="Member">
+        update Member set nick = #{nick}, password = #{password}, gender = #{gender},
+                          email = #{email} where id = #{id}
+    </update>
+    <update id="delete" parameterType="Member">
+        update Member set mDel = "y" where id = #{id}
+    </update>
+    <select id="selectBymNo" parameterType="integer" resultType="Member">
+        select *
+        from member
+        where mNo = #{mNo}
+    </select>
+    <select id="countMemberByEmail" parameterType="string" resultType="integer">
+        select count(*) from member where email = #{email}
+    </select>
+</mapper>

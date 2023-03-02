@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Join Us! - Travel Planner</title>
+    <div th:replace="fragments/config :: configFragment"></div>
+
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Travel Chat</a>
+    </div>
+    </div>
+</nav>
+<form id="frm" action="/register/signup" method="post" onsubmit="return chk()">
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6">
+            <div class="form-group mt-5">
+                <fieldset>
+                    <label class="form-label" for="email">Email</label>
+                    <input class="form-control" id="email" name="email" type="text" th:value="${emailCode.email}"
+                           readonly="readonly" >
+                </fieldset>
+            </div>
+            <div class="form-group">
+                <label class="col-form-label mt-4" for="nick">Nickname</label>
+                <input type="text" class="form-control" aria-describedby="idHelp"
+                       id="nick" name="nick">
+                <small id="idHelp" class="form-text text-muted">2자 이상 12자 이하의 영문 또는 한글을 사용해주세요.</small>
+            </div>
+            <div class="form-group">
+                <label class="col-form-label mt-4" for="password">Password</label>
+                <input type="password" class="form-control" name="password" aria-describedby="passHelp"
+                       id="password">
+                <small id="passHelp" class="form-text text-muted">영문, 숫자 조합 8자 이상, 16자 이하로 사용해주세요.</small>
+                <div id="passFeedBack"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-form-label mt-4" for="passwordChk">Password check</label>
+                <input type="password" class="form-control" id="passwordChk"
+                       aria-describedby="passChkHelp" name="passwordChk">
+                <small id="passChkHelp" class="form-text text-muted">동일한 password를 입력해주세요.</small>
+                <div id="passChkFeedBack"></div>
+
+            </div>
+
+            <fieldset class="form-group" aria-describedby="genderHelp">
+                <legend class="mt-4">성별</legend>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="gender" id="male" value="male" checked="">
+                    <label class="form-check-label" for="male">
+                        남성
+                    </label>
+                </div>
+                <div class="form-check bt-5">
+                    <input class="form-check-input" type="radio" name="gender" id="female" value="female">
+                    <label class="form-check-label" for="female">
+                        여성
+                    </label>
+                </div>
+            </fieldset>
+            <small id="genderHelp" class="form-text text-muted">프로필 수정에서 공개 수준을 변경할 수 있습니다.</small>
+            <div class="form-check mt-5" align="center">
+                <button type="submit" class="btn btn-primary">Join!</button>
+                <button type="button" class="btn btn-warning" onclick="reset()">Reset</button>
+            </div>
+
+        </div>
+    </div>
+    <div class="col-3"></div>
+</form>
+</body>
+<script th:inline="javascript">
+    // redirect 시 출력할 msg, css
+    /*<![CDATA[*/
+    let msg = [[${msg}]];
+    /*]]>*/
+    if(msg=="INS_ERR") {
+        alert("가입에 실패하였습니다 다시 시도해주세요.");
+    }
+    function chk() {
+        let blank = /\s/g;
+        if (frm.nick.value.length < 2 || frm.nick.value.length > 12) {
+            alert("닉네임는 2자 이상, 12자 이하로 입력해주세요")
+            frm.nick.focus();
+            return false;
+        }
+
+        let nickChk = frm.nick.value;
+        if (nickChk.match(blank)) {
+            alert("닉네임에 공백이 포함될 수 없습니다.");
+            frm.nick.focus();
+            return false;
+        }
+        let nickPattern = /[^(가-힣a-zA-Z)]/;
+        if (nickPattern.test(frm.nick.value)) {
+            alert("닉네임은 영문 대소문자, 한글만 입력 가능합니다.")
+            frm.nick.focus();
+            return false;
+        }
+
+        let pwd = frm.password.value;
+        let feedBack1 = $("#passFeedBack");
+        let pass = $("#password");
+
+        if (frm.password.value.length < 8 || frm.password.value.length > 16) {
+            alert("비밀번호는 8자 이상, 16자 이하로 입력해주세요");
+            frm.password.focus();
+            pass.attr('class', 'form-control is-invalid');
+            feedBack1.attr('class', 'invalid-feedback');
+            feedBack1.html("비밀번호는 8자 이상, 16자 이하로 입력해주세요");
+            return false;
+        }
+        if (pwd.match(blank)) {
+            alert("비밀번호에 공백이 포함될 수 없습니다.");
+            frm.password.focus();
+            pass.attr('class', 'form-control is-invalid');
+            feedBack1.attr('class', 'invalid-feedback');
+            feedBack1.html("비밀번호에 공백이 포함될 수 없습니다.");
+            return false;
+        }
+        let pwdPattern = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/;
+        if (!pwdPattern.test(frm.password.value)) {
+            alert("비밀번호는 영문 + 숫자만 가능합니다.")
+            frm.password.focus();
+            pass.attr('class', 'form-control is-invalid');
+            feedBack1.attr('class', 'invalid-feedback');
+            feedBack1.html("비밀번호는 영문 + 숫자만 가능합니다.");
+            return false;
+        }
+        if (frm.password.value !== frm.passwordChk.value) {
+            alert("암호와 암호 확인이 다릅니다");
+            frm.passwordChk.focus(); // 커서
+            let pwdChk = $("#passwordChk");
+            let feedBack2 = $("#passChkFeedBack");
+
+            pwdChk.attr('class', 'form-control is-invalid');
+            feedBack2.attr('class', 'invalid-feedback');
+            feedBack2.html("암호와 암호 확인이 서로 다릅니다.");
+            return false;
+        }
+    }
+    function reset(){
+        frm.nick.value = '';
+        frm.password.value = '';
+        frm.passwordChk.value = '';
+        frm.male.checked;
+    }
+</script>
+</html>

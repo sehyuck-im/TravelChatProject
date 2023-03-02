@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="container mb-5">
+        <div class="row mt-4">
+            <div class="col-3"></div>
+            <div class="col-6">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item active">받은 참가 요청
+                        <span class="badge bg-primary rounded-pill ms-2" id="requestCnt"
+                              th:text="${#lists.size(highFiveRequestList)}"></span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-3"></div>
+            <div class="col-6" id="listDiv">
+                <div class="card mt-2" th:each="request : ${highFiveRequestList}" th:if="${!#lists.isEmpty(highFiveRequestList)}"
+                     th:id="${request.requestNo}">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <a th:href="@{/member/info(mNo=${request.sender})}"
+                               style="text-decoration: none">
+                                <img width="35" height="35" class="rounded-circle"
+                                     th:src="${#strings.equals(request.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${request.sender}+'/'+${request.photo}}">
+                            </a><span th:text="${request.nick}"></span><span th:text="${request.code}"
+                                                                             class="text-muted"></span>
+                            님으로부터 <span th:text="${request.title}" class="text-info"></span> 참가 요청이왔습니다.
+                        </h4>
+                        <div align="center" th:data="${request.nick}+${request.code}">
+                            <button type="button" class="acceptBtn btn btn-outline-secondary"
+                                    th:data="${request.requestNo}+','+accept">수락
+                            </button>
+                            <button type="button" class="declineBtn btn btn-outline-danger"
+                                    th:data="${request.requestNo}+','+decline">거절
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mt-2" th:if="${#lists.isEmpty(highFiveRequestList)}" id="noMoreRequest">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            받은 요청이 없습니다.
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="fragments/footer :: footerFragment"></div>
+</body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let msg = [[${msg}]];
+    /*]]>*/
+
+    $(function () {
+        const mNo = [[${#session.getAttribute('mNo')}]];
+        // const websocket = new WebSocket("ws://3.39.44.182:8080/ws/chat");
+        const websocket = new WebSocket("wss://travelchatportfolio.click/ws/chat");
+        websocket.onopen = onOpen;  // 소켓이 생성될때(클라이언트 접속)
+        websocket.onmessage = onMessage;
+        websocket.onclose = onClose;
+
+        function onOpen() {
+            register();
+        }
+
+        //채팅 리스트에 들어왔을 때 사용자 등록
+        function register() {
+            let msg = {
+                type: "highFiveList",
+                mNo: String(mNo)
+            }
+            websocket.send(JSON.stringify(msg));
+        }
+
+        function onClose() {
+            websocket.close();
+        }
+
+        function onMessage(event) {
+            let msg = event.data; // 메세지는 event의 data 속성으로 들어온다.
+            // 입장시 메세지를 불러오는 건지 알림으로 들어오는건지 구분
+            if(msg.includes("<div class=\"receivedHighFive\"></div>")){
+                prependRequest(msg);
+                $(".receivedHighFive").remove();
+                let requestCnt = Number($("#requestCnt").text());
+                if(requestCnt == 0){
+                    $("#noMoreRequest").remove();
+                }
+                $("#requestCnt").text(requestCnt+1);
+
+            }
+
+        }
+
+        function prependRequest(msg) {
+            // 리스트 위에 붙여주기
+            $("#listDiv").prepend(msg);
+        }
+
+        function responseRequest() { // 헤더에서 카운트 줄여주기
+            let responseRequest = {
+                type: "responseHighFive",
+                mNo: String(mNo)
+            }
+            websocket.send(JSON.stringify(responseRequest));
+        }
+
+        $(document).on("click", ".acceptBtn, .declineBtn", function () { // 수락, 거절 버튼을 눌렀을 때
+            let dataArr = $(this).attr("data").split(",");
+            let sender = $(this).parent().attr("data");
+
+            let requestNo = dataArr[0];
+            let type = dataArr[1];
+            let requestCnt = Number($("#requestCnt").text());
+
+            $.ajax({
+                url: "/chat/responseHighFive?requestNo=" + requestNo + "&type=" + type,
+                type: "GET",
+                success: function (data) {
+                    if (data == "ACCEPT") {
+                        alert(sender + "을 채팅에 초대하였습니다.");
+                        $("#requestCnt").text(requestCnt - 1);
+                        $("#" + requestNo).remove();
+                        if (requestCnt <= 1) {// 요청이 더이상 없는 경우
+                            $("#listDiv").append("<div class='card mt-2'id='noMoreRequest'><div class='card-body'><h4 class='card-title'>받은 요청이 없습니다</h4></div></div>");
+                        }
+                        // 친구 수락, 거절이면 헤더에서 카운트 --
+                       responseRequest();
+
+                    } else if (data == "DECLINE") {
+                        alert(sender + "님의 참가를 거절하였습니다.");
+                        $("#requestCnt").text(requestCnt - 1);
+                        $("#" + requestNo).remove();
+                        if (requestCnt <= 1) {// 요청이 더이상 없는 경우
+                            $("#listDiv").append("<div class='card mt-2' id='noMoreRequest'><div class='card-body'><h4 class='card-title'>받은 요청이 없습니다</h4></div></div>");
+                        }
+                        responseRequest();
+
+
+                    } else if (data == "RESPONSE_ERR" || data == "REQUEST_NOT_FOUND" || data == "UNEXPECTED_ERR" || data == "DELETE_ERR") {
+                        console.log(data);
+                        alert("에러가 발생했습니다. 다시 시도해주세요.");
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에게 문의 바랍니다. travelPlannerOffical@gmail.com");
+                }
+            });
+        });
+
+
+    });
+
+</script>
+
+</html>

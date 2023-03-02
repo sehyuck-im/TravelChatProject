@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.common.repository.FeedRepository">
+    <insert id="insertFeed" useGeneratedKeys="true" keyProperty="feedNo" parameterType="Feed">
+        insert into Feed (writer, content,commentCount, createTime, del) values (#{writer}, #{content},0, now(), 'n')
+    </insert>
+    <update id="updatePhotos" parameterType="Feed">
+        update Feed set photo = #{photo} where feedNo = #{feedNo}
+    </update>
+    <select id="selectFeedListByMNo" parameterType="integer" resultType="Feed">
+        select feedNo, writer, photo, content, commentCount, date_format(createTime, "%d %M, %Y") as stringDate, del
+        from Feed where writer = #{mNo}
+                    and del = 'n' order by feedNo desc limit 5
+    </select>
+    <select id="selectAppendFeed" parameterType="integer" resultType="Feed">
+        select feedNo, writer, photo, content, commentCount, date_format(createTime, "%d %M, %Y") as stringDate, del
+        from Feed where writer = #{mNo}
+                    and <![CDATA[ feedNo < #{lastNo} ]]>
+                    and del = 'n' order by feedNo desc limit 5
+    </select>
+    <select id="selectFeedByFeedNo" parameterType="integer" resultType="Feed">
+        select * from Feed where feedNo = #{feedNo}
+    </select>
+    <update id="deleteFeed" parameterType="Feed">
+        update Feed set del = 'y' where feedNo = #{feedNo}
+    </update>
+    <update id="updatePhotosAndContent" parameterType="Feed">
+        update Feed set photo = #{photo}, content = #{content} where feedNo = #{feedNo}
+    </update>
+    <update id="updateContent" parameterType="Feed">
+        update Feed set content = #{content} where feedNo = #{feedNo}
+    </update>
+    <update id="updateCommentCount" parameterType="integer">
+        update Feed set commentCount = commentCount + 1 where feedNo = #{feedNo}
+    </update>
+    <update id="minusCommentCount" parameterType="integer">
+        update Feed set commentCount = commentCount - #{count} where feedNo = #{feedNo}
+    </update>
+    <select id="countAllFeedByWriter" parameterType="integer" resultType="integer">
+        select count(*) from feed where del = 'n' and writer = #{mNo}
+    </select>
+</mapper>

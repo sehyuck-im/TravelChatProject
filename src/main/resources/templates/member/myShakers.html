@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <div th:replace="fragments/config :: configFragment"></div>
+
+</head>
+<body>
+<div class="wrapper">
+    <div th:replace="fragments/header :: headerFragment"></div>
+    <div class="container mb-5">
+        <div class="row mt-4">
+            <div class="col-3"></div>
+            <div class="col-6">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item active">My Shakers
+                        <span class="badge bg-primary rounded-pill ms-2" id="shakerCnt"
+                              th:text="${shakerCount}"></span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        <th:block th:if="${shakerCount == 0}">
+            <div class="row mt-2">
+                <div class="col-3"></div>
+                <div class="col-6">
+
+                </div>
+            </div>
+        </th:block>
+        <th:block th:if="${shakerCount != 0}" th:each="shaker : ${memberList}">
+            <div class="row mt-2">
+                <div class="col-3"></div>
+                <div class="col-6">
+                    <div class="card mt-2" th:id="${shaker.mNo}">
+                        <div class="card-body">
+                            <h4 class="card-title" th:nick="${shaker.nick}" th:code="${shaker.code}" th:data="${shaker.mNo}">
+                                <a th:href="@{/member/info(mNo=${shaker.mNo})}"
+                                   style="text-decoration: none">
+                                    <img width="35" height="35" class="rounded-circle"
+                                         th:src="${#strings.equals(shaker.photo, 'none')}?'../images/noPhoto.png': @{'/image/profile/'+${shaker.mNo}+'/'+${shaker.photo}}">
+                                <span th:text="${shaker.nick}"></span><span th:text="${shaker.code}"
+                                                                                 class="text-muted"></span>
+                                </a>
+
+                                <button type="button" class="goodByeBtn btn btn-outline-secondary rounded" >
+                                    <i class="fa-solid fa-handshake-angle"></i>
+                                </button>
+                                <button type="button" class="directMessageBtn btn btn-outline-secondary rounded">
+                                    <i class="far fa-paper-plane"></i>
+                                </button>
+                            </h4>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+
+    </div>
+</div>
+<div th:replace="fragments/footer :: footerFragment"></div>
+</body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let msg = [[${msg}]];
+    /*]]>*/
+
+    $(function () {
+        $(document).on("click", ".goodByeBtn", function () { // 친구 삭제 버튼
+            let nick = $(this).parent().attr("nick");
+            let code = $(this).parent().attr("code");
+            let target = $(this).parent().attr("data");
+            if(confirm(nick+code+"과 작별 하시겠습니까?")){
+                $.ajax({
+                    url: "/member/goodBye?target=" + target,
+                    type: "GET",
+                    success: function (data) {
+                        if (data == "SUCCESS") {
+                            alert("친구 삭제 성공");
+                            location.reload();
+                        } else if (data == "UNEXPECTED_ERR" || data == "DEL_ERR") {
+                            console.log(data);
+                            alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                        } else if(data=="NOTSHAKER" || data=="NOSHAKER"){
+                            alert("잘못된 요청입니다. 확인하시고 다시 시도해주세요");
+                            location.reload();
+                        }
+                    },
+                    error: function () {
+                        alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                        location.reload();
+                    }
+                });
+            }
+        });
+        $(document).on("click", ".directMessageBtn", function () { // 수락, 거절 버튼을 눌렀을 때
+            // 1. 대화방 연결 요청
+            let receiver = $(this).parent().attr("data");
+
+            $.ajax({
+                url: "/chat/request?receiver=" + receiver,
+                type: "GET",
+                success: function (data) {
+                    if (data.includes("SUCCESS")) {
+                        alert("요청 성공, 상대방이 수락하면 대화가 시작됩니다.");
+                        // let requestNo = data.slice(7);
+                        sendChatRequest();
+
+                    } else if (data == "REQUEST_ERR") {
+                        alert("에러가 발생했습니다. 다시 시도해주세요.");
+                    } else if (data == "WAIT_RESPONSE") {
+                        alert("상대방의 수락을 대기 중입니다.")
+                    } else if (data.includes("crNo=")) {
+                        let str = data.split("=");
+                        let crNo = str[1];
+
+                        location.href = "/chat/chatRoom?crNo=" + crNo;
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생했습니다 다시 시도해주세요 반복적으로 발생시 관리자에서 문의 바랍니다. travelPlannerOffical@gmail.com");
+                }
+            });
+
+        });
+
+    });
+
+</script>
+
+</html>

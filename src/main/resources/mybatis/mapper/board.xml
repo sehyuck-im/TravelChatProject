@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.board.repository.BoardRepository">
+    <insert id="insertBoard" parameterType="Board" useGeneratedKeys="true" keyProperty="bNo">
+        insert into Board (title, writer, content, bDel, updateTime ) values (#{title}, #{writer}, #{content}, 'n', now())
+    </insert>
+    <select id="selectAllBoardList" resultType="Board">
+        select * from Board where bDel = 'n' order by updateTime
+    </select>
+    <select id="selectAllBoardCount" resultType="integer">
+        select count(*) from Board where bDel= 'n'
+    </select>
+    <select id="getSearchResultPage" parameterType="SearchCondition" resultType="Board">
+        SELECT bNo, title, writer, content, updateTime
+        FROM board
+        WHERE bDel = 'n'
+        <include refid="searchCondition"/>
+        ORDER BY updateTime DESC, bno DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="selectSearchedCount" parameterType="SearchCondition" resultType="integer">
+        select count(*) from Board where bDel= 'n'
+        <include refid="searchCondition"/>
+    </select>
+    <sql id="searchCondition">
+        <choose>
+            <when test='option=="T"'>
+                AND title LIKE concat('%', #{keyword}, '%')
+            </when>
+            <when test='option=="C"'>
+                AND content LIKE concat('%', #{keyword}, '%')
+            </when>
+            <otherwise>
+                AND (title LIKE concat('%', #{keyword}, '%')
+                OR content LIKE concat('%', #{keyword}, '%'))
+            </otherwise>
+        </choose>
+    </sql>
+    <select id="selectBoardByBNo" parameterType="integer" resultType="Board">
+        select * from Board where bDel = 'n' and bNo = #{bNo}
+    </select>
+    <update id="pullBoardUp" parameterType="integer">
+        update Board set updateTime = now() where bNo = #{bNo}
+    </update>
+    <update id="updateBoard" parameterType="Board">
+        update Board set title = #{title}, content = #{content} where bNo = #{bNo}
+    </update>
+    <update id="deleteBoard" parameterType="Board">
+        update Board set bDel = 'y' where bNo = #{bNo}
+    </update>
+    <update id="updateChatRoomNo" parameterType="integer">
+        update Board set crNo = #{crNo} where bNo = #{bNo}
+    </update>
+    <select id="selectBoardTitleByCrNo" parameterType="integer" resultType="string">
+        select title from board where crNo = #{crNo}
+    </select>
+    <select id="countAllBoardByWriter" parameterType="integer" resultType="integer">
+        select count(*) from board  where writer = #{mNo};
+    </select>
+</mapper>

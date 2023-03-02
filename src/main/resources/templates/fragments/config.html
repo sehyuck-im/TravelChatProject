@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+>
+<head th:fragment="configFragment">
+    <meta charset="UTF-8"/>
+    <!-- 공통으로 쓰이는 css파일을넣는다.-->
+    <link href="/bootstrap/css/bootstrap.sketchy.css" rel="stylesheet" type="text/css">
+    <!-- 컨텐츠페이지의 CSS 영역이 들어감 -->
+    <th:block layout:fragment="css"></th:block>
+    <title>Travel Chat</title>
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+    <!-- 공통으로 쓰이는 css파일을넣는다.-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/autosize.js/4.0.2/autosize.min.js"></script>
+    <script src="https://kit.fontawesome.com/caadb2c167.js" crossorigin="anonymous"></script>
+    <script src="https://bootswatch.com/_vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://bootswatch.com/_vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://bootswatch.com/_vendor/prismjs/prism.js" data-manual=""></script>
+    <script src="https://bootswatch.com/_assets/js/custom.js"></script>
+<!--    <link href="/bootstrap/js/scripts.js" rel="script">-->
+<!--    <script src="/bootstrap/js/scripts.js"></script>-->
+    <!-- 컨텐츠페이지의 스크립트 영역이 들어감 -->
+    <th:block layout:fragment="script"></th:block>
+
+
+</head>
+</html>

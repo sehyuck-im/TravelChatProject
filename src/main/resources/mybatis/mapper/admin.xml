@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.TravelChat.admin.repository.AdminRepository">
+
+    <select id="countChatRoomsCreatedToday" parameterType="String" resultType="integer">
+        select count(*) from ChatRoom where DATE(updateTime) = #{strDate}
+    </select>
+    <select id="countMembersJoinedToday" parameterType="String" resultType="integer">
+        select count(*) from member where DATE(regDate) = #{strDate}
+    </select>
+    <select id="countFeedsCreatedToday" parameterType="String" resultType="integer">
+        select count(*) from feed where DATE(createTime) = #{strDate}
+    </select>
+    <select id="countReportsCreatedToday" parameterType="String" resultType="integer">
+        select count(*) from report where DATE(reportTime) = #{strDate}
+    </select>
+    <select id="getUncheckedReport" resultType="Report">
+        select * from report where chk = 'n' order by reportNo desc limit 10
+    </select>
+    <select id="selectTargetChatUserByUserNo" resultType="ChatUser" parameterType="integer">
+        select * from chatUser where userNo  = #{userNo}
+    </select>
+    <select id="selectAllHistoryByChatUser" parameterType="ChatUser" resultType="ChatHistory">
+        select * from chatHistory where crNo = #{crNo} order by chNo asc
+    </select>
+    <select id="selectAllUsersAtChatRoom" resultType="ChatUser" parameterType="integer">
+        select cu.*, m.nick as nick from chatUser cu, member m where crNo = #{crNo} and cu.mNo = m.mNo;
+    </select>
+    <update id="suspendMember" parameterType="Member">
+        update member set status = 's' where mNo= #{mNo}
+    </update>
+    <update id="checkReport" parameterType="Report">
+        update Report set chk = 'y' where reportNo = #{reportNo}
+    </update>
+
+    <sql id="updateReportHistoryOption">
+        <choose>
+            <when test='type==1'>
+                set feed = feed+1
+            </when>
+            <when test='type==2'>
+                set profile = profile+1
+            </when>
+            <otherwise>
+                set chat = chat+1
+            </otherwise>
+        </choose>
+    </sql>
+    <update id="suspendReportHistory" parameterType="Report">
+        update ReportHistory <include refid="updateReportHistoryOption"/> , suspendCount = suspendCount + 1 where mNo = #{target}
+    </update>
+    <update id="updateSuspendCount" parameterType="Member">
+        update ReportHistory set suspendCount = suspendCount + 1 where mNo = #{mNo}
+    </update>
+    <select id="countReportHistoryByMNo" parameterType="integer" resultType="integer">
+        select count(*) from reportHistory where mNo = #{mNo}
+    </select>
+    <insert id="insertReportHistory" parameterType="integer">
+        insert into ReportHistory (mNo ,feed, profile, chat, suspendCount)
+            values (#{mNo}, 0 , 0, 0, 0)
+    </insert>
+    <update id="updateReportHistory" parameterType="Report">
+        update ReportHistory <include refid="updateReportHistoryOption"></include> where mNo = #{target}
+    </update>
+    <update id="updateReportChk" parameterType="Report">
+        update Report set chk = 'y' where reportNo = #{reportNo}
+    </update>
+    <select id="getUncheckedReportList" resultType="Report" parameterType="integer">
+        select * from Report where chk = 'n' order by reportNo desc LIMIT #{offset}, 10
+    </select>
+    <select id="selectMemberList" parameterType="SearchCondition" resultType="Member">
+        select mNo, email, nick, gender, status, date_format(regDate, "%d %M, %Y") as stringDate from member order by mNo desc LIMIT #{offset }, 10
+    </select>
+    <select id="countTotalMember" resultType="integer">
+        select count(*) from member
+    </select>
+    <update id="releaseMember" parameterType="integer">
+        update Member set status = 'n' where mNo = #{mNo}
+    </update>
+    <select id="countTotalFeed" resultType="integer">
+        select count(*) from feed
+    </select>
+    <select id="selectFeedList" resultType="Feed" parameterType="SearchCondition">
+        select feedNo, writer, photo, content, commentCount, date_format(createTime, "%d %M, %Y") as stringDate, del from feed order by feedNo desc LIMIT #{offset }, 10
+    </select>
+    <select id="selectCommentListByFeedNo" parameterType="integer" resultType="Comment">
+        select cm.cno,cm.feedNo, cm.pcno, cm.level, cm.writer, cm.content, m.nick, ifnull(p.photo, 'none') as photo, cm.del
+        from comment cm, member m, profile p
+        where cm.feedNo = #{feedNo} and p.mNo = cm.writer and m.mNo = p.mNo order by pcno asc, cno asc;
+    </select>
+    <update id="recoverFeed" parameterType="Feed">
+        update Feed set del = 'n' where feedNo = #{feedNo}
+    </update>
+    <select id="countTotalChatRoom" resultType="integer">
+        select count(*) from chatRoom
+    </select>
+    <select id="selectChatRoomList" parameterType="SearchCondition" resultType="ChatRoomDeliver">
+        select * from chatRoom order by crNo desc LIMIT #{offset }, 10
+    </select>
+</mapper>
