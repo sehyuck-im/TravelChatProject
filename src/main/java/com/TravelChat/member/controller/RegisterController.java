@@ -79,7 +79,7 @@ public class RegisterController {
             int result = es.upsert(emailCode);
             // 1이면 insert, 2면 update
             if (result != 1 && result != 2) {
-                // 에러 잡는 페이지 만들것
+                // 둘다 아닐 경우 roll back
                 email.setReason("DB_ERR");
             }
         }
@@ -155,10 +155,9 @@ public class RegisterController {
     public String sendNewPass(@RequestBody String email) {
         int count = ms.countMemberByEmail(email);
         if (count == 0) {
-            System.out.println("count == 0");
+
             return "NOT_MEMBER";
         }
-
         // 1. membr select
         Member member = ms.selectById(email);
         // 2. 10자리 무작위 숫자+알파벳 비밀번호 생성
@@ -172,8 +171,6 @@ public class RegisterController {
             e.printStackTrace();
             return "FAIL";
         }
-
-
     }
 
 }

@@ -33,13 +33,10 @@ public class EmailSendServiceImpl implements EmailSendService {
 
     @Override
     public Email sendEmailCode(Email email) {
-
         String title = "Are you ready to travel?🔥  ";
         String content = email.getCode();
-
         email.setTitle(title);
         email.setContent(content);
-
         try {
             MimeMessage message = emailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -63,20 +60,13 @@ public class EmailSendServiceImpl implements EmailSendService {
             // 완료 후 enCoding된 code set 해주기
             String enCode = passwordEncoder.encode(content);
             email.setReason(enCode);
-
-
-
         } catch (MailException e) {
             e.printStackTrace();
             email.setReason("INVALID_EMAIL");
-
-
         } catch (Exception e) {
             e.printStackTrace();
             email.setReason("ERROR");
-
         }
-
         return email;
     }
 
