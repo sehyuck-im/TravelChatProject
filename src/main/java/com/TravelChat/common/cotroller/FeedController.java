@@ -39,7 +39,6 @@ public class FeedController {
         String profilePhoto = memberService.selectPhotoByMno(mNo);
         // 최초에 가장 최근 5개만 불러오기
         List<Feed> myFeedList = feedService.selectRecentFeedListByMNo(mNo);
-
         for (Feed feed : myFeedList) {
             // feed 사진 set
             String[] photoArr = feed.getPhoto().split(",");
@@ -79,7 +78,6 @@ public class FeedController {
         String profilePhoto;
         // lastNo 보다 작은 5개 feed 가져오기
         List<Feed> myFeedList;
-
         if(type.equals("info")){
             Feed lastFeed = feedService.selectFeedByFeedNo(lastNo);
             member = memberService.selectByMno(lastFeed.getWriter());
@@ -94,8 +92,6 @@ public class FeedController {
         }
         nick = nickAndCode[0];
         code = nickAndCode[1];
-
-
 
         if(myFeedList.isEmpty()){
             return "noMoreFeed";
@@ -170,7 +166,7 @@ public class FeedController {
 
     @GetMapping("/modifyFeed")
     public String modifyFeedForm(@RequestParam("feedNo") int feedNo, Model model) {
-        int mNo = (int) session.getAttribute("mNo");
+//        int mNo = (int) session.getAttribute("mNo");
         Feed feed = feedService.selectFeedByFeedNo(feedNo);
         String[] photoArr = feed.getPhoto().split(",");
         if (photoArr.length > 1) { // 사진이 두장 이상이면
@@ -185,7 +181,7 @@ public class FeedController {
     @PostMapping("/modifyFeed")
     public String modifyFeed(RedirectAttributes rattr, @RequestParam("photos") List<MultipartFile> photos, Feed feed) {
         int mNo = (int) session.getAttribute("mNo");
-        Feed temp = feedService.selectFeedByFeedNo(feed.getFeedNo());
+//        Feed temp = feedService.selectFeedByFeedNo(feed.getFeedNo());
         feed.setWriter(mNo);
         String result = "";
         if (photos.get(0).getSize() == 0) { // 사진 업데이트가 없는 경우
