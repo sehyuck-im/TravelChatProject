@@ -71,7 +71,7 @@ public class CommentController {
         if(temp.getWriter() != mNo){
             return new ResponseEntity<String>("MOD_ERR", HttpStatus.BAD_REQUEST);
         }
-        System.out.println("comment = " + comment);
+
         comment.setCno(cno);
         try {
             if(commentService.updateComment(comment) != 1)

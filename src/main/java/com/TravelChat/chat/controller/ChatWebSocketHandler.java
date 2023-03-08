@@ -262,8 +262,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     ws.sendMessage(new TextMessage(msg));
 
                     ws = (WebSocketSession) userMap.get(chatUser.getMNo()+"Header");
-                    System.out.println("unreadCnt = " + unreadCnt);
-                    System.out.println("<div class=\"discountUnreadCount\" data=\""+unreadCnt+"\"></div>");
+                   
                     ws.sendMessage(new TextMessage("<div class=\"discountUnreadCount\" data=\""+unreadCnt+"\"></div>"));
 
                     //채팅방에 있는 사람들은 실시간으로 readCount 변화 보여주기

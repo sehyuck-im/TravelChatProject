@@ -31,7 +31,6 @@ public class BoardRestController {
 
     @GetMapping("/board")
     public ModelAndView boardList(SearchCondition sc) {
-        int mNo = (int) session.getAttribute("mNo");
         ModelAndView mv = new ModelAndView("/board/boardList");
 
         int totalCount = 0;

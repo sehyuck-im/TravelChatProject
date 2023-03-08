@@ -136,7 +136,7 @@
                 websocket.send(JSON.stringify(msg));
             }
 
-            // <div class="chatAlert"
+
             function onMessage(event) {
                 let msg = event.data; // 메세지는 event의 data 속성으로 들어온다.
                 if (msg.includes("<div class=\"chatAlert\"")) { // 웹소켓에 header session 등록 한 후
