@@ -271,7 +271,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                             if(userMap.containsKey(userAtRoom.getUserNo()+"Room")){
                                 ws = (WebSocketSession) userMap.get(userAtRoom.getUserNo()+"Room");
                                 msg = "<div class=\"someoneReadMsg\" data=\"";
-                                System.out.println("chatHistoryUnreadList = " + chatHistoryUnreadList);
+
                                 for(int i=0; i<chatHistoryUnreadList.size(); i++){
                                     msg += chatHistoryUnreadList.get(i).getChNo();
                                     if(i != chatHistoryUnreadList.size()-1){
@@ -280,7 +280,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                                 }
 
                                 msg += "\" > </div>";
-                                System.out.println("msg = " + msg);
+
                                 //어디서부터 어디까지 읽었는지 data에 보내주기
                                 ws.sendMessage(new TextMessage(msg));
                             }

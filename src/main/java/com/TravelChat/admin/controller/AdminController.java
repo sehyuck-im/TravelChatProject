@@ -247,6 +247,7 @@ public class AdminController {
 
         return "/adminPage/memberDetail";
     }
+
     @GetMapping("/suspendMemberByMNo")
     @ResponseBody
     public String suspendMemberByMNo(@RequestParam("mNo")int mNo){
