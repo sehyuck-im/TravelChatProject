@@ -47,7 +47,7 @@ public class MemberController {
 
 
     @PostMapping("/signIn")
-    public String signIn(Member member, Model m, RedirectAttributes rattr)  {
+    public String signIn(Member member, Model m, RedirectAttributes rattr) {
         Member tempMember = ms.selectById(member.getEmail());
 
         if (tempMember == null) { // 일치하는 아이디가 없을 경우
@@ -258,7 +258,7 @@ public class MemberController {
             return "redirect:/member/myProfile";
         }
         int chk = ms.countMemberByMNo(memberNumber);
-        if(chk == 0){
+        if (chk == 0) {
             model.addAttribute("result", 1);
             return "/member/notFound";
         }
@@ -267,10 +267,10 @@ public class MemberController {
         // nick code 분리
 
 
-            String[] nickAndCode = ms.separateNick(targetMember.getNick());
-            String code = nickAndCode[1];
-            targetMember.setNick(nickAndCode[0]);
-            targetMember.setCode(code);
+        String[] nickAndCode = ms.separateNick(targetMember.getNick());
+        String code = nickAndCode[1];
+        targetMember.setNick(nickAndCode[0]);
+        targetMember.setCode(code);
 
         // db에서 shaker key가 있는지 확인
         int cnt = shakerService.countShakerKeyByMNo(readerNo);
@@ -444,8 +444,8 @@ public class MemberController {
             // 친구인지 확인
             Shaker shaker = shakerService.selectByMNo(shakeRequest.getReceiver());
             String[] myShakers = shaker.getShakers().split(",");
-            for(String temp : myShakers){
-                if(temp.equals(Integer.toString(shakeRequest.getSender()))){
+            for (String temp : myShakers) {
+                if (temp.equals(Integer.toString(shakeRequest.getSender()))) {
                     return "ALREADY";
                 }
             }
