@@ -1,5 +1,6 @@
 package com.TravelChat.member.controller;
 
+import com.TravelChat.common.Util.UtilService;
 import com.TravelChat.common.model.Email;
 import com.TravelChat.common.model.EmailCode;
 import com.TravelChat.member.model.Member;
@@ -29,6 +30,9 @@ public class RegisterController {
     private MemberService ms;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UtilService utilService;
+
 
     @GetMapping("/emailChk")
     public String emailChk(EmailCode emailCode, Model m) {
@@ -67,8 +71,7 @@ public class RegisterController {
         Email email = new Email();
         email.setTo(to);
         // 6자리 난수 생성
-        String code = ms.ranNum(6);
-        email.setCode(code);
+        email.setCode(utilService.ranNum(6));
         // emailcode 전송
         email = es.sendEmailCode(email);
         if (email.getReason().equals("INVALID_EMAIL") || email.getReason().equals("ERROR")) {
@@ -161,7 +164,7 @@ public class RegisterController {
         // 1. membr select
         Member member = ms.selectById(email);
         // 2. 10자리 무작위 숫자+알파벳 비밀번호 생성
-        String newPass = ms.ranNumAndAlphabet(10);
+        String newPass = utilService.ranNumAndAlphabet(10);
         member.setPassword(passwordEncoder.encode(newPass));
         // 3. 이메일 발송 + 비밀번호 변경
         try {

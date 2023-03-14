@@ -49,24 +49,8 @@ public interface MemberService {
 
     int countMemberByEmail(String email);
 
-    String ranNumAndAlphabet(int length);
-
     void updatePassAndSendEmail(Member member, String newPass) throws Exception;
 
     int countMemberByMNo(int memberNumber);
 
-//    int signIn(Member member, Member tempMember);
-
-//    //Test codes
-//    Member select(Member tempMember);
-//
-//    int delete(Member member);
-//
-//    int update(Member member);
-//
-////    int memberValChk(Member member, Member tempMember);
-//
-//    int insert(Member tempMember);
-//
-//    Member convertPassword(Member member);
 }
